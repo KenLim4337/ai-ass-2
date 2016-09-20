@@ -1,5 +1,6 @@
 package robot;
 
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,8 +10,7 @@ public class Vertex {
 	float pathCost = Integer.MAX_VALUE;//Max value by default
 	float f = Integer.MAX_VALUE;
 	float h = 0;
-	float x;
-	float y;
+	Point2D p;
 
 	/**
 	 * Creates a new vertex
@@ -20,17 +20,20 @@ public class Vertex {
 		this.edges = new ArrayList<Edge>();
 	}
 	
-	public Vertex(int id,float x, float y) {
+
+	public Vertex(double x, double y) {
+		this.p.setLocation(x, y);
+	}
+	
+	public Vertex(int id,double x, double y) {
 		this.id = id;
-		this.x = x;
-		this.y =y;
+		this.p.setLocation(x, y);
 	}
 
-	public Vertex(int id, ArrayList<Edge>edges,float x, float y){
+	public Vertex(int id, ArrayList<Edge>edges,double x, double y){
 		this.id =id;
 		this.edges = edges;
-		this.x = x;
-		this.y =y;
+		this.p.setLocation(x, y);
 	}
 	
 	public int getId() {
@@ -101,22 +104,21 @@ public class Vertex {
 		return result;
 	}
 
-	public float getX() {
-		return x;
+	
+
+	public Point2D getP() {
+		return p;
 	}
 
-	public float getY() {
-		return y;
+
+	public void setP(Point2D p) {
+		this.p = p;
 	}
 
-	public void setX(float x) {
-		this.x = x;
+	public void setP(double x, double y) {
+		this.p.setLocation(x, y);
 	}
-
-	public void setY(float y) {
-		this.y = y;
-	}
-
+	
 	public String toString() {
 		return ""+getId();
 	}

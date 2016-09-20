@@ -106,6 +106,16 @@ public class Vertex {
 
 	
 
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+	public void setEdges(List<Edge> edges) {
+		this.edges = edges;
+	}
+
+
 	public Point2D getP() {
 		return p;
 	}

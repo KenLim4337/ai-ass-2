@@ -8,6 +8,7 @@ public class Vertex {
 	int id; /* The course name */
 	List<Edge> edges;
 	float pathCost = Integer.MAX_VALUE;//Max value by default
+	float totalH = 0;
 	float f = Integer.MAX_VALUE;
 	float h = 0;
 	Point2D p;
@@ -70,6 +71,10 @@ public class Vertex {
 	
 	public void setH(float h) {
 		this.h = h;
+	}
+
+	public float getTotalH (){
+		return totalH;
 	}
 	
 	public boolean intersects(Vertex v1){

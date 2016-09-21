@@ -4,14 +4,19 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
+
+import problem.ArmConfig;
+
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
 public class search {
+
 	
 	
 	public void searcher(List<Vertex> x, Vertex start, Vertex end) {
 		//Priority queue init
-
+		
 		PriorityQueue<Vertex> queue = new PriorityQueue<Vertex>(10, new Comparator<Vertex>() {
 		public int compare(Vertex o1, Vertex o2) {
 			if (o1.getH() < o2.getH()) return -1;
@@ -101,22 +106,38 @@ public class search {
 		return result;
 	}
 	
-	public double calculateHeuristic(Vertex a, Vertex goal) {
-		//Pythagoras stuff
-		Point2D Initial = a.getP();
-		Point2D Goal = goal.getP();
+	public double calculateHeuristic(ArmConfig a, ArmConfig goal) {
+		//Get list of point 2Ds for comparison
+		List<Point2D> comp = new ArrayList<Point2D>();	
+		double configH = 0;
 		
-		if (Initial.getX() == Goal.getX()) {
-			a.setH((float) Math.abs(Initial.getY() - Goal.getY()));
-			return Math.abs(Initial.getY() - Goal.getY());
-		} else if (Initial.getY() == Goal.getY()) {
-			a.setH((float) Math.abs(Initial.getX() - Goal.getX()));
-			return Math.abs(Initial.getX() - Goal.getX());
-		} else {
-			a.setH((float)Math.sqrt((Math.abs(Initial.getY() - Goal.getY()) + (Math.abs(Initial.getX() - Goal.getX())))));
-			return Math.sqrt((Math.abs(Initial.getY() - Goal.getY()) + (Math.abs(Initial.getX() - Goal.getX()))));
+		comp.add(a.getBaseCenter());
+		
+		for(Line2D e: a.getLinks()) {
+			comp.add(e.getP2());
 		}
 		
+		List<Point2D> fin = new ArrayList<Point2D>();	
+		
+		fin.add(goal.getBaseCenter());
+		
+		for(Line2D e: goal.getLinks()) {
+			fin.add(e.getP2());
+		}
+		
+		for (int i=0; i < comp.size(); i++) {
+			Point2D tempcomp = comp.get(i);
+			Point2D tempgoal = fin.get(i);
+			if(tempcomp == tempgoal) {
+				configH += 0;
+			}else if (tempcomp.getX() == tempgoal.getX()) {
+				configH += Math.abs(tempcomp.getY() - tempgoal.getY());
+			}else if (tempcomp.getY() == tempgoal.getY()) {
+				configH += Math.abs(tempcomp.getX() - tempgoal.getX());
+			}else {
+				configH += Math.sqrt((Math.abs(tempcomp.getY() - tempgoal.getY()) + (Math.abs(tempcomp.getX() - tempgoal.getX()))));
+			}
+		}
+		return configH;
 	}
-	
 }

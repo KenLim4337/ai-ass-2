@@ -10,8 +10,7 @@ public class Vertex {
 	int id; /* The course name */
 	List<Edge> edges;
 	double pathCost = Integer.MAX_VALUE;//Max value by default
-	double f = Integer.MAX_VALUE;
-	double h = 0;
+	double h = -1;
 	ArmConfig c;
 	Vertex parent;
 
@@ -64,11 +63,7 @@ public class Vertex {
 	}
 	
 	public double getF() {
-		return f;
-	}
-	
-	public void setF(float f) {
-		this.f = f;
+		return pathCost + h;
 	}
 	
 	public double getH() {

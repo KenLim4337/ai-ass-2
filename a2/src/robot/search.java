@@ -31,7 +31,6 @@ public class search {
 	        return 0;
 		}});
 		
-
 		Graph environment = x;
 		
 		//Result
@@ -41,7 +40,6 @@ public class search {
 		List<Vertex> explored = new ArrayList<Vertex>();
 		
 		//Set starting point initial cost to 0
-		environment.getVertexById(0).setF(0);
 		environment.getVertexById(0).setPathCost(0);
 		
 		//Add root to PQ
@@ -78,11 +76,11 @@ public class search {
 	    		continue;
 	    	}
 	    	
-	    	//Calculates total heuristics of next node
-	    	
-	    	double heuristic = calculateHeuristic(e.getV2().getC(), fin);
-	
-	    	e.getV2().setH(heuristic);
+	    	//Calculates heuristic of next vertex and sets it if it is not already set.
+	    	if(e.getV2().getH() == -1) {
+		    	double heuristic = calculateHeuristic(e.getV2().getC(), fin);
+		    	e.getV2().setH(heuristic);
+	    	}
 	    	
 	    	//Sets destination parent to current if if destination has no parent or destination is not current's parent
 	    	if ((e.getV2().getParent() == null) 

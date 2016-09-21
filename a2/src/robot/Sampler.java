@@ -18,6 +18,8 @@ import java.awt.geom.Point2D;
 public class Sampler {
 	//Bool defining if we have found a solution
 	boolean isPathFound;
+	//keep track of amount of vertices sampled
+    int counter = 0;
 	//Distance D we are working with
 	static final float D = (float)0.1;
 	//result
@@ -48,11 +50,9 @@ public class Sampler {
 	 * 
 	 *@return a Config space graph
 	 */
-	public Graph generateConfigSpace(){
+	public Graph sampleConfigSpace(Graph graph){
 		//Initialise result
-		Graph result = new Graph();
-		//Keep track of the number of vertices in result
-		int counter = 0;
+		//Graph result = new Graph();
 		//Randomly generate n
 		double n = Math.random();
 		//k = number of strats = 3 
@@ -88,8 +88,8 @@ public class Sampler {
 					r = 0;
 					if(!s.equals(null)){
 						v.setId(counter++); 
-						result.addLoc(v); 
-						int i = result.generateEdge(v,obstacles).size();
+						graph.addLoc(v); 
+						int i = graph.generateEdge(v,obstacles,tester).size();
 						if(i>0)
 							r =1;
 					}
@@ -100,9 +100,9 @@ public class Sampler {
 					strats.get(strats.indexOf(s)).setWeight( s.getWeight()*Math.exp(((n*r)/s.getProb())/k ));
 					
 				}
-				//search graph here
+				//isPathFound = search.//search graph here
 			}else{
-			return result;
+			return graph;
 			}
 		}
 	}

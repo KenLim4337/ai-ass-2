@@ -12,11 +12,18 @@ import java.awt.geom.Point2D;
 
 public class search {
 
-	
-	
-	public void searcher(List<Vertex> x, Vertex start, Vertex end) {
-		//Priority queue init
+	public void searcher(Graph x, Vertex end) {
 		
+		List<Point2D> fin = new ArrayList<Point2D>();	
+		
+		fin.add(end.getC().getBaseCenter());
+		
+		for(Line2D e: end.getC().getLinks()) {
+			fin.add(e.getP2());
+		}
+		
+		
+		//Priority queue init
 		PriorityQueue<Vertex> queue = new PriorityQueue<Vertex>(10, new Comparator<Vertex>() {
 		public int compare(Vertex o1, Vertex o2) {
 			if (o1.getH() < o2.getH()) return -1;
@@ -25,7 +32,7 @@ public class search {
 		}});
 		
 
-		List<Vertex> environment = x;
+		Graph environment = x;
 		
 		//Result
 		List<Vertex> result = new ArrayList<Vertex>();
@@ -34,10 +41,10 @@ public class search {
 		List<Vertex> explored = new ArrayList<Vertex>();
 		
 		//Set starting point initial cost to 0
-		environment.get(0).setH(0);
+		environment.getVertexById(0);
 		
 		//Add root to PQ
-		queue.add(environment.get(0));
+		queue.add(environment.getVertexById(0));
 		
 		//Main PQ Loop
 		while (!queue.isEmpty()){
@@ -63,39 +70,34 @@ public class search {
 	    //Iterates through each edge on node
 	    for(Edge e: current.getEdges()){
 	    	
-	    	/*To do:
-	    	 *  - Add check where branch terminates if over maximum length (no. joints * 0.05) 
-	    	 *  - Add distance total to each vertex
-	    	 *  
-	    	 * 
-	    	 */
-	    	
-	    	
-	    	//Calculates total heuristics of next node
-	    	double heuristic = graph[current.getIndex()].getPath() + e.getCost();
-	
 	    	//Checks if destination already explored or if there is a shorter path to destination
-	    	if (explored.contains(e.getDestination()) || 
-	    			(e.getDestPath() != 0 && currentpath >= e.getDestPath())) {                	
+	    	if (explored.contains(e.getV2()) || queue.contains(e.getV2())) {                	
 	    		continue;
 	    	}
 	    	
+	    	//Calculates total heuristics of next node
+	    	
+	    	double heuristic = calculateHeuristic(e.getV2().getC(), fin);
+	
+	    	e.getV2().setH(heuristic);
+	    	
+	    	/*
 	    	//Sets node parent to current if if destination has no parent or destination is not current's parent
 	    	if ((graph[e.getDestIndex()].getParent() == null) 
 	    			|| !(graph[current.getIndex()].getParent().equals(graph[e.getDestIndex()]))) {
 	    		graph[e.getDestIndex()].setParent(graph[current.getIndex()]);
 	    	}	
+	    	*/
 	    	
+	    	/*
 	    	//Removes queue entry if it already exists
 	    	if(queue.contains(graph[e.getDestIndex()])) {
 	    		queue.remove(graph[e.getDestIndex()]);
 	    	}
-	    	
-	    	//Sets current path total for destination
-	    	graph[e.getDestIndex()].setPath(currentpath);
+	    	*/
 	    	
 	    	//Adds destination to queue
-			queue.add(graph[e.getDestIndex()]);
+			queue.add(e.getV2());
 	    }
 	
 	}
@@ -103,10 +105,10 @@ public class search {
 	//Prints error message if solution does not exist
 		System.out.println("Solution does not exist.");
 		result = null;
-		return result;
+		return;
 	}
 	
-	public double calculateHeuristic(ArmConfig a, ArmConfig goal) {
+	public double calculateHeuristic(ArmConfig a, List<Point2D> goal) {
 		//Get list of point 2Ds for comparison
 		List<Point2D> comp = new ArrayList<Point2D>();	
 		double configH = 0;
@@ -117,17 +119,9 @@ public class search {
 			comp.add(e.getP2());
 		}
 		
-		List<Point2D> fin = new ArrayList<Point2D>();	
-		
-		fin.add(goal.getBaseCenter());
-		
-		for(Line2D e: goal.getLinks()) {
-			fin.add(e.getP2());
-		}
-		
 		for (int i=0; i < comp.size(); i++) {
 			Point2D tempcomp = comp.get(i);
-			Point2D tempgoal = fin.get(i);
+			Point2D tempgoal = goal.get(i);
 			if(tempcomp == tempgoal) {
 				configH += 0;
 			}else if (tempcomp.getX() == tempgoal.getX()) {

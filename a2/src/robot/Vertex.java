@@ -10,9 +10,9 @@ public class Vertex {
 	int id; /* The course name */
 	List<Edge> edges;
 	float pathCost = Integer.MAX_VALUE;//Max value by default
-	float totalH = 0;
+	double totalH = 0;
 	float f = Integer.MAX_VALUE;
-	float h = 0;
+	double h = 0;
 	ArmConfig c;
 
 	/**
@@ -71,15 +71,15 @@ public class Vertex {
 		this.f = f;
 	}
 	
-	public float getH() {
+	public double getH() {
 		return h;
 	}
 	
-	public void setH(float h) {
+	public void setH(double h) {
 		this.h = h;
 	}
 
-	public float getTotalH (){
+	public double getTotalH (){
 		return totalH;
 	}
 	
@@ -142,6 +142,11 @@ public class Vertex {
 	
 	public String toString() {
 		return ""+getId();
+	}
+
+
+	public void setTotalH(double i) {
+		this.totalH = i;
 	}
 }
 

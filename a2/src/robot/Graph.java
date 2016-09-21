@@ -86,14 +86,25 @@ public class Graph implements Cloneable {
 		ArrayList<Edge> result = new ArrayList<Edge>();
 		boolean isValid = true;
 		for(Vertex v1: this.getLocations()){
-			
 			 isValid = checkLineValid(v.getC(),v1.getC(),obs,tester);
 			 if(isValid){
-					Edge e = new Edge(v, v1, v.getC().getBaseCenter().distance(v1.getC().getBaseCenter()));
+					Edge e = new Edge(v, v1);//, v.getC().getBaseCenter().distance(v1.getC().getBaseCenter()));
 					result.add(e);
 					this.addE(e);
 			}
 		}
+			//For each link in the chair check that the config is valid
+			//this needs to be moved into the sampler
+			/*for(Line2D l: v.getC().getLinks()){
+				Rectangle2D r = l.getBounds2D();
+				for(Obstacle o: obs){
+					//if the rectangles intersect
+					if(r.intersects(o.getRect())){
+						// do simple collision check
+						isValid = !o.getRect().intersectsLine(l);
+					}
+				}
+			}*/
 		
 		return result;
 	}

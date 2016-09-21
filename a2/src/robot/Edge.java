@@ -1,5 +1,11 @@
 package robot;
 
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
+
+import problem.ArmConfig;
 
 public class Edge {
 	Vertex v1;
@@ -12,10 +18,10 @@ public class Edge {
 		weight = 0;
 	}
 
-	public Edge(Vertex v1, Vertex v2, double weight) {
+	public Edge(Vertex v1, Vertex v2) {
 		this.v1 = v1;
 		this.v2 = v2;
-		this.weight = weight;
+		this.weight = weightFinder();
 	}
 	
 	public boolean contains(Vertex v){
@@ -38,6 +44,43 @@ public class Edge {
 
 	public Vertex getV2() {
 		return this.v2;
+	}
+	
+	//Returns net movement from initial vertex to end vertex as weight
+	public double weightFinder() {
+		double totalWeight = 0;
+		List<Point2D> v1Pts = new ArrayList<Point2D>();	
+		List<Point2D> v2Pts = new ArrayList<Point2D>();	
+		
+		ArmConfig vee1 = this.v1.getC();
+		ArmConfig vee2 = this.v2.getC();
+		
+		v1Pts.add(vee1.getBaseCenter());
+		
+		for(Line2D e: vee1.getLinks()) {
+			v1Pts.add(e.getP2());
+		}
+		
+		v2Pts.add(vee2.getBaseCenter());
+		
+		for(Line2D e: vee2.getLinks()) {
+			v2Pts.add(e.getP2());
+		}
+		
+		for (int i=0; i < v1Pts.size(); i++) {
+			Point2D tempv1 = v1Pts.get(i);
+			Point2D tempv2 = v2Pts.get(i);
+			if(tempv1 == tempv2) {
+				totalWeight += 0;
+			}else if (tempv1.getX() == tempv2.getX()) {
+				totalWeight += Math.abs(tempv1.getY() - tempv2.getY());
+			}else if (tempv1.getY() == tempv2.getY()) {
+				totalWeight += Math.abs(tempv1.getX() - tempv2.getX());
+			}else {
+				totalWeight += Math.sqrt((Math.abs(tempv1.getY() - tempv2.getY()) + (Math.abs(tempv1.getX() - tempv2.getX()))));
+			}
+		}
+		return totalWeight;
 	}
 	
 	public double getWeight() {

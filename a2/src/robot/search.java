@@ -11,7 +11,7 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
 public class search {
-
+	
 	public void searcher(Graph x, Vertex end) {
 		
 		List<Point2D> fin = new ArrayList<Point2D>();	
@@ -26,8 +26,8 @@ public class search {
 		//Priority queue init
 		PriorityQueue<Vertex> queue = new PriorityQueue<Vertex>(10, new Comparator<Vertex>() {
 		public int compare(Vertex o1, Vertex o2) {
-			if (o1.getH() < o2.getH()) return -1;
-	        if (o1.getH() > o2.getH()) return 1;
+			if (o1.getF() < o2.getF()) return -1;
+	        if (o1.getF() > o2.getF()) return 1;
 	        return 0;
 		}});
 		
@@ -41,7 +41,8 @@ public class search {
 		List<Vertex> explored = new ArrayList<Vertex>();
 		
 		//Set starting point initial cost to 0
-		environment.getVertexById(0);
+		environment.getVertexById(0).setF(0);
+		environment.getVertexById(0).setPathCost(0);
 		
 		//Add root to PQ
 		queue.add(environment.getVertexById(0));
@@ -51,7 +52,7 @@ public class search {
 			
 		//Takes top node in PQ
 	    Vertex current = queue.poll();
-    
+	    
 	    //Runs if solution found
 	    if(current.getId() == end.getId()){
 	    	/*
@@ -70,8 +71,10 @@ public class search {
 	    //Iterates through each edge on node
 	    for(Edge e: current.getEdges()){
 	    	
+	    	double cost = e.getWeight() + current.getPathCost();
+	    	
 	    	//Checks if destination already explored or if there is a shorter path to destination
-	    	if (explored.contains(e.getV2()) || queue.contains(e.getV2())) {                	
+	    	if (explored.contains(e.getV2()) || environment.getVertexById(e.getV2().getId()).getPathCost() < cost) {                	
 	    		continue;
 	    	}
 	    	
@@ -81,23 +84,22 @@ public class search {
 	
 	    	e.getV2().setH(heuristic);
 	    	
-	    	/*
-	    	//Sets node parent to current if if destination has no parent or destination is not current's parent
-	    	if ((graph[e.getDestIndex()].getParent() == null) 
-	    			|| !(graph[current.getIndex()].getParent().equals(graph[e.getDestIndex()]))) {
-	    		graph[e.getDestIndex()].setParent(graph[current.getIndex()]);
+	    	//Sets destination parent to current if if destination has no parent or destination is not current's parent
+	    	if ((e.getV2().getParent() == null) 
+	    			|| !(current.getParent().equals(e.getV2()))) {
+	    		e.getV2().setParent(current);
 	    	}	
-	    	*/
 	    	
-	    	/*
 	    	//Removes queue entry if it already exists
-	    	if(queue.contains(graph[e.getDestIndex()])) {
-	    		queue.remove(graph[e.getDestIndex()]);
+	    	if(queue.contains(e.getV2())) {
+	    		queue.remove(e.getV2());
 	    	}
-	    	*/
 	    	
 	    	//Adds destination to queue
 			queue.add(e.getV2());
+			
+			//Updates destination total cost
+			e.getV2().setPathCost(cost);
 	    }
 	
 	}

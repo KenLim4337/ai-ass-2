@@ -9,11 +9,11 @@ import problem.ArmConfig;
 public class Vertex {
 	int id; /* The course name */
 	List<Edge> edges;
-	float pathCost = Integer.MAX_VALUE;//Max value by default
-	double totalH = 0;
-	float f = Integer.MAX_VALUE;
+	double pathCost = Integer.MAX_VALUE;//Max value by default
+	double f = Integer.MAX_VALUE;
 	double h = 0;
 	ArmConfig c;
+	Vertex parent;
 
 	/**
 	 * Creates a new vertex
@@ -55,15 +55,15 @@ public class Vertex {
 		return this.edges;	
 	}
 	
-	public void setPathCost(float cost){
+	public void setPathCost(double cost){
 		this.pathCost = cost;
 	}
 	
-	public float getPathCost(){
+	public double getPathCost(){
 		return this.pathCost;
 	}
 	
-	public float getF() {
+	public double getF() {
 		return f;
 	}
 	
@@ -77,10 +77,6 @@ public class Vertex {
 	
 	public void setH(double h) {
 		this.h = h;
-	}
-
-	public double getTotalH (){
-		return totalH;
 	}
 	
 	public boolean intersects(Vertex v1){
@@ -143,10 +139,13 @@ public class Vertex {
 	public String toString() {
 		return ""+getId();
 	}
-
-
-	public void setTotalH(double i) {
-		this.totalH = i;
+	
+	public void setParent(Vertex x) {
+		this.parent = x;
+	}
+	
+	public Vertex getParent() {
+		return parent;
 	}
 }
 

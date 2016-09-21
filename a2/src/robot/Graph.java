@@ -95,7 +95,7 @@ public class Graph implements Cloneable {
 				}
 			}*/
 			if(isValid){
-				Edge e = new Edge(v, v1, v.getC().getBaseCenter().distance(v1.getC().getBaseCenter()));
+				Edge e = new Edge(v, v1);
 				result.add(e);
 				this.addE(e);
 			}

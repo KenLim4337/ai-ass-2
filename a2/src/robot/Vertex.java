@@ -32,6 +32,10 @@ public class Vertex {
 		this.id = id;
 		this.c.getBaseCenter().setLocation(x, y);
 	}
+	
+	public Vertex(ArmConfig c){
+		this.c = c;
+	}
 
 	public Vertex(int id, ArrayList<Edge>edges,double x, double y){
 		this.id =id;
@@ -128,11 +132,11 @@ public class Vertex {
 	}
 
 
-	public void setP(ArmConfig p) {
+	public void setC(ArmConfig c) {
 		this.c = c;
 	}
 
-	public void setP(double x, double y) {
+	public void setC(double x, double y) {
 		this.c.getBaseCenter().setLocation(x, y);
 	}
 	

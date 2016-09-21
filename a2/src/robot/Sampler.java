@@ -1,11 +1,12 @@
 package robot;
+import problem.ArmConfig;
 import problem.Obstacle;
+import problem.ProblemSpec;
+import tester.Tester;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
-import java.awt.geom.Rectangle2D;
+import java.awt.geom.Point2D;
 
 
 
@@ -23,10 +24,15 @@ public class Sampler {
 	Graph configSpace = new Graph();
 	//List of obstacle defining the workspace
 	List<Obstacle>obstacles;
-	//BVTree ObstacleBVT = new BVTree(obstacles);
 	
-	public Sampler(List<Obstacle>obstacles){
-		this.obstacles = obstacles;
+	ProblemSpec specs;
+	
+	Tester tester;
+	
+	public Sampler(Tester tester){
+		this.tester = tester;
+		this.specs = tester.getPs();
+		this.obstacles = specs.getObstacles();
 	}
 	/**
 	 * Exp3 Sampling stategy implementation
@@ -121,42 +127,52 @@ public class Sampler {
 		}
 		
 	}
+	
+	
+	
 	/**
 	 * 
 	 * @return sample a config q Uniformely at random
 	 */
 	public Vertex randomSampling(){
-		return new Vertex((float) Math.random(),(float)Math.random());
+		ArrayList<Double> angles = new ArrayList<Double>();
+		for(int i = 0; i<specs.getJointCount();i++){
+			angles.add(Math.random());
+		}
+		ArmConfig c = new ArmConfig(new Point2D.Double(Math.random(),Math.random()),angles);
+		if(!tester.hasCollision(c, obstacles)&& tester.hasValidJointAngles(c)&& !tester.hasSelfCollision(c))
+			return new Vertex(c);
+		return null;
 	}
-	
 	
 	/**
 	 * 
 	 * @return a config sampled near an obstacle
 	 */
 	public Vertex nearObstacleSampling(){
-		boolean q1valid,q2valid;
 		 //loop until we find a config that works, might need to take this off to account for weighting.
-		 q1valid = true;
-		 q2valid = true;
 		//sample q1 uniformely at random
 		Vertex q1 = randomSampling();
 		//Sample q2 uniformely at random from the set of all configs withing Distance D
-		Vertex q2 = new Vertex(q1.getC().getBaseCenter().getX()+Math.random()*D,q1.getC().getBaseCenter().getY()+Math.random()*D); 
+		Vertex q2 = new Vertex(new ArmConfig(new Point2D.Double(
+					(q1.getC().getBaseCenter().getX() +Math.random()*D),(q1.getC().getBaseCenter().getY()+Math.random()*D)),
+					randomSampling().getC().getJointAngles())); 
 		//Check that the configs are valid
-		for(Obstacle o : obstacles){
+		/*for(Obstacle o : obstacles){
 			if (q1valid&& o.getRect().contains(q1.getC().getBaseCenter())){
 				q1valid = false;
 			}
 			if(q2valid&&o.getRect().contains(q2.getC().getBaseCenter())){
 				q2valid = false;
 			}
-		}
+		}*/
 		//if one of the 2 is valid and the other isnt then we have a sampling near an obstacle
+		boolean q1valid = ! tester.hasCollision(q1.getC(), obstacles)&& tester.hasValidJointAngles(q1.getC())&& !tester.hasSelfCollision(q1.getC());
+		boolean q2valid = ! tester.hasCollision(q2.getC(), obstacles)&& tester.hasValidJointAngles(q2.getC())&& !tester.hasSelfCollision(q2.getC());
 		if(!q1valid&&q2valid){
-			return q2;
+				return q2;
 		}else if(!q2valid&&q1valid){
-			return q1;
+				return q1;
 		}
 		//We didnt find a valid config
 		return null;
@@ -168,28 +184,19 @@ public class Sampler {
 	public Vertex sampleInsidePassage(){
 		boolean q1valid,q2valid;
 		Vertex q1 = randomSampling();
-		Vertex q2 = new Vertex(q1.getC().getBaseCenter().getX()+Math.random()*D,q1.getC().getBaseCenter().getY()+Math.random()*D); 
-		q1valid = true;
-		q2valid = true;
-		//Check if q1 & q2 are invalid
-		for(Obstacle o : obstacles){
-			if (o.getRect().contains(q1.getC().getBaseCenter())&&q1valid){
-				q1valid = false;
-			}
-			if(o.getRect().contains(q2.getC().getBaseCenter())&&q2valid){
-				q2valid = false;
-			}
-		}
+		Vertex q2 = new Vertex(new ArmConfig(new Point2D.Double(
+				(q1.getC().getBaseCenter().getX() +Math.random()*D),(q1.getC().getBaseCenter().getY()+Math.random()*D)),
+				randomSampling().getC().getJointAngles()));
+		q1valid = ! tester.hasCollision(q1.getC(), obstacles)&& tester.hasValidJointAngles(q1.getC())&& !tester.hasSelfCollision(q1.getC());
+		q2valid = ! tester.hasCollision(q2.getC(), obstacles)&& tester.hasValidJointAngles(q2.getC())&& !tester.hasSelfCollision(q2.getC());
+		
 		if(q1valid == false && q2valid == false){
 			double x = (q1.getC().getBaseCenter().getX()+q2.getC().getBaseCenter().getX())/2;
 			double y = (q1.getC().getBaseCenter().getY()+q2.getC().getBaseCenter().getY())/2;
-			boolean qmvalid =true;
-			Vertex qm = new Vertex(x,y);
-			for(Obstacle o : obstacles){
-				qmvalid = !o.getRect().contains(qm.getC().getBaseCenter());
-			}
+			ArmConfig cm = new ArmConfig(new Point2D.Double(x,y),randomSampling().getC().getJointAngles());
+			boolean qmvalid =! tester.hasCollision(cm, obstacles)&& tester.hasValidJointAngles(cm)&& !tester.hasSelfCollision(cm);
 			if(qmvalid){
-				return qm;
+				return new Vertex(cm);
 			}
 		}
 		//We didnt find a valid config
@@ -227,6 +234,11 @@ public class Sampler {
 		
 	}
 	private class StratList extends ArrayList<weightedStrat>{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 251726265965715745L;
+
 		private StratList(){
 			super();
 		}

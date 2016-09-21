@@ -657,4 +657,13 @@ public class Tester {
 		}
 		System.exit(numFailures);
 	}
+
+	public ProblemSpec getPs() {
+		return ps;
+	}
+
+	public void setPs(ProblemSpec ps) {
+		this.ps = ps;
+	}
+	
 }

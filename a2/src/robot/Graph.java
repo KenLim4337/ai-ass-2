@@ -8,14 +8,14 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 
 import problem.Obstacle;
+import problem.ProblemSpec;
 
 public class Graph implements Cloneable {
 	ArrayList<Vertex>locations;
 	HashSet<Edge> edges;
 	int numberOfLocation;
 	
-	
-	
+
 	public Graph(){
 		locations = new ArrayList<Vertex>();
 		edges= new HashSet<Edge>();
@@ -82,15 +82,18 @@ public class Graph implements Cloneable {
 		ArrayList<Edge> result = new ArrayList<Edge>();
 		for(Vertex v1: this.getLocations()){
 			boolean isValid = true;
-			Line2D l = new Line2D.Double(v.getC().getBaseCenter(), v1.getC().getBaseCenter()	);
-			Rectangle2D r = l.getBounds2D();
-			for(Obstacle o: obs){
-				//if the rectangles intersect
-				if(r.intersects(o.getRect())){
-					// do simple collision check
-					isValid = !o.getRect().intersectsLine(l);
+			//For each link in the chair check that the config is valid
+			//this needs to be moved into the sampler
+			/*for(Line2D l: v.getC().getLinks()){
+				Rectangle2D r = l.getBounds2D();
+				for(Obstacle o: obs){
+					//if the rectangles intersect
+					if(r.intersects(o.getRect())){
+						// do simple collision check
+						isValid = !o.getRect().intersectsLine(l);
+					}
 				}
-			}
+			}*/
 			if(isValid){
 				Edge e = new Edge(v, v1, v.getC().getBaseCenter().distance(v1.getC().getBaseCenter()));
 				result.add(e);

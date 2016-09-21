@@ -4,6 +4,8 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import problem.ArmConfig;
+
 public class Vertex {
 	int id; /* The course name */
 	List<Edge> edges;
@@ -11,7 +13,7 @@ public class Vertex {
 	float totalH = 0;
 	float f = Integer.MAX_VALUE;
 	float h = 0;
-	Point2D p;
+	ArmConfig c;
 
 	/**
 	 * Creates a new vertex
@@ -23,18 +25,18 @@ public class Vertex {
 	
 
 	public Vertex(double x, double y) {
-		this.p.setLocation(x, y);
+		this.c.getBaseCenter().setLocation(x, y);
 	}
 	
 	public Vertex(int id,double x, double y) {
 		this.id = id;
-		this.p.setLocation(x, y);
+		this.c.getBaseCenter().setLocation(x, y);
 	}
 
 	public Vertex(int id, ArrayList<Edge>edges,double x, double y){
 		this.id =id;
 		this.edges = edges;
-		this.p.setLocation(x, y);
+		this.c.getBaseCenter().setLocation(x, y);
 	}
 	
 	public int getId() {
@@ -121,17 +123,17 @@ public class Vertex {
 	}
 
 
-	public Point2D getP() {
-		return p;
+	public ArmConfig getC() {
+		return c;
 	}
 
 
-	public void setP(Point2D p) {
-		this.p = p;
+	public void setP(ArmConfig p) {
+		this.c = c;
 	}
 
 	public void setP(double x, double y) {
-		this.p.setLocation(x, y);
+		this.c.getBaseCenter().setLocation(x, y);
 	}
 	
 	public String toString() {

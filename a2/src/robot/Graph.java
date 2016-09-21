@@ -82,7 +82,7 @@ public class Graph implements Cloneable {
 		ArrayList<Edge> result = new ArrayList<Edge>();
 		for(Vertex v1: this.getLocations()){
 			boolean isValid = true;
-			Line2D l = new Line2D.Double(v.getP(), v1.getP());
+			Line2D l = new Line2D.Double(v.getC().getBaseCenter(), v1.getC().getBaseCenter()	);
 			Rectangle2D r = l.getBounds2D();
 			for(Obstacle o: obs){
 				//if the rectangles intersect
@@ -92,7 +92,7 @@ public class Graph implements Cloneable {
 				}
 			}
 			if(isValid){
-				Edge e = new Edge(v, v1, v.getP().distance(v1.getP()));
+				Edge e = new Edge(v, v1, v.getC().getBaseCenter().distance(v1.getC().getBaseCenter()));
 				result.add(e);
 				this.addE(e);
 			}

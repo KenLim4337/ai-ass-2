@@ -142,13 +142,13 @@ public class Sampler {
 		//sample q1 uniformely at random
 		Vertex q1 = randomSampling();
 		//Sample q2 uniformely at random from the set of all configs withing Distance D
-		Vertex q2 = new Vertex(q1.getP().getX()+Math.random()*D,q1.getP().getY()+Math.random()*D); 
+		Vertex q2 = new Vertex(q1.getC().getBaseCenter().getX()+Math.random()*D,q1.getC().getBaseCenter().getY()+Math.random()*D); 
 		//Check that the configs are valid
 		for(Obstacle o : obstacles){
-			if (o.getRect().contains(q1.getP())&&q1valid){
+			if (q1valid&& o.getRect().contains(q1.getC().getBaseCenter())){
 				q1valid = false;
 			}
-			if(o.getRect().contains(q2.getP())&&q2valid){
+			if(q2valid&&o.getRect().contains(q2.getC().getBaseCenter())){
 				q2valid = false;
 			}
 		}
@@ -168,25 +168,25 @@ public class Sampler {
 	public Vertex sampleInsidePassage(){
 		boolean q1valid,q2valid;
 		Vertex q1 = randomSampling();
-		Vertex q2 = new Vertex(q1.getP().getX()+Math.random()*D,q1.getP().getY()+Math.random()*D); 
+		Vertex q2 = new Vertex(q1.getC().getBaseCenter().getX()+Math.random()*D,q1.getC().getBaseCenter().getY()+Math.random()*D); 
 		q1valid = true;
 		q2valid = true;
 		//Check if q1 & q2 are invalid
 		for(Obstacle o : obstacles){
-			if (o.getRect().contains(q1.getP())&&q1valid){
+			if (o.getRect().contains(q1.getC().getBaseCenter())&&q1valid){
 				q1valid = false;
 			}
-			if(o.getRect().contains(q2.getP())&&q2valid){
+			if(o.getRect().contains(q2.getC().getBaseCenter())&&q2valid){
 				q2valid = false;
 			}
 		}
 		if(q1valid == false && q2valid == false){
-			double x = (q1.getP().getX()+q2.getP().getX())/2;
-			double y = (q1.getP().getY()+q2.getP().getY())/2;
+			double x = (q1.getC().getBaseCenter().getX()+q2.getC().getBaseCenter().getX())/2;
+			double y = (q1.getC().getBaseCenter().getY()+q2.getC().getBaseCenter().getY())/2;
 			boolean qmvalid =true;
 			Vertex qm = new Vertex(x,y);
 			for(Obstacle o : obstacles){
-				qmvalid = !o.getRect().contains(qm.getP());
+				qmvalid = !o.getRect().contains(qm.getC().getBaseCenter());
 			}
 			if(qmvalid){
 				return qm;
@@ -238,10 +238,5 @@ public class Sampler {
 			}
 			return retval;
 		}
-	}
-	
-	private class BVTree {
-		BVTree Children;
-		
 	}
 }

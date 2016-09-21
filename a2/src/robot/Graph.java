@@ -2,6 +2,12 @@ package robot;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.awt.geom.Point2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Rectangle2D;
+
+import problem.Obstacle;
 
 public class Graph implements Cloneable {
 	ArrayList<Vertex>locations;
@@ -71,5 +77,26 @@ public class Graph implements Cloneable {
 		return "Graph [locations=" + locations + ", edges=" + edges
 				+ ", numberOfLocation=" + numberOfLocation + "]";
 	}
-	
+	//Rectangular bound collision check
+	public List<Edge> generateEdge(Vertex v, List<Obstacle>obs){
+		ArrayList<Edge> result = new ArrayList<Edge>();
+		for(Vertex v1: this.getLocations()){
+			boolean isValid = true;
+			Line2D l = new Line2D.Double(v.getP(), v1.getP());
+			Rectangle2D r = l.getBounds2D();
+			for(Obstacle o: obs){
+				//if the rectangles intersect
+				if(r.intersects(o.getRect())){
+					// do simple collision check
+					isValid = !o.getRect().intersectsLine(l);
+				}
+			}
+			if(isValid){
+				Edge e = new Edge(v, v1, v.getP().distance(v1.getP()));
+				result.add(e);
+				this.addE(e);
+			}
+		}
+		return result;
+	}
 }

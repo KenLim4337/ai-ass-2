@@ -4,7 +4,7 @@ package robot;
 public class Edge {
 	Vertex v1;
 	Vertex v2;
-	float weight;
+	double weight;
 
 	public Edge() {
 		v1 = new Vertex();
@@ -12,7 +12,7 @@ public class Edge {
 		weight = 0;
 	}
 
-	public Edge(Vertex v1, Vertex v2, float weight) {
+	public Edge(Vertex v1, Vertex v2, double weight) {
 		this.v1 = v1;
 		this.v2 = v2;
 		this.weight = weight;
@@ -40,7 +40,7 @@ public class Edge {
 		return this.v2;
 	}
 	
-	public float getWeight() {
+	public double getWeight() {
 		return weight;
 	}
 

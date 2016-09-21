@@ -13,7 +13,7 @@ import java.awt.geom.Point2D;
 public class search {
 	
 	public void searcher(Graph x, Vertex end) {
-		
+		//Builds list of points in goal for comparison purposes
 		List<Point2D> fin = new ArrayList<Point2D>();	
 		
 		fin.add(end.getC().getBaseCenter());
@@ -119,6 +119,7 @@ public class search {
 			comp.add(e.getP2());
 		}
 		
+		//Gets direct distance between current point and goal
 		for (int i=0; i < comp.size(); i++) {
 			Point2D tempcomp = comp.get(i);
 			Point2D tempgoal = goal.get(i);

@@ -19,7 +19,7 @@ public class Sampler {
 	//Bool defining if we have found a solution
 	boolean isPathFound;
 	//keep track of amount of vertices sampled
-    int counter = 0;
+    int counter = 2; //id 0,1 are reserved for init and goal vertices
 	//Distance D we are working with
 	static final float D = (float)0.1;
 	//result

@@ -47,7 +47,13 @@ public class Edge {
 		return this.v2;
 	}
 	
-	//Returns net movement in terms of number of primitive steps from initial vertex to end vertex as weight
+	/*Calculates number of primitive steps from initial vertex to next vertex as weight
+	 
+	 Calculations based on the fact that each joint and the chair moves independently.
+	 
+	 Therefore the number of primitive steps = the highest number of primitive steps taken by a single joint or chair.
+	
+	*/
 	public int weightFinder() {
 		
 		int totalWeight = 0;
@@ -60,22 +66,17 @@ public class Edge {
 		Point2D tempv1 = vee1.getBaseCenter();
 		Point2D tempv2 = vee2.getBaseCenter();
 		
-		tempWeight += Math.abs(tempv1.getY() - tempv2.getY()) + Math.abs(tempv1.getX() - tempv2.getX());
+		tempWeight = Math.abs(tempv1.getY() - tempv2.getY()) + Math.abs(tempv1.getX() - tempv2.getX());
 		
-		totalWeight += (tempWeight/0.001);
-		
-		
-		tempWeight = 0;
+		totalWeight = (int) (tempWeight/0.001);
 		
 		for (int i=0; i < vee1.getJointCount(); i++) {
-			if(vee1.getJointAngles().get(i) == vee2.getJointAngles().get(i)) {
-				tempWeight += 0;
-			} else {
-				tempWeight += Math.abs(vee2.getJointAngles().get(i) - vee1.getJointAngles().get(i));
+			tempWeight = Math.abs(vee2.getJointAngles().get(i) - vee1.getJointAngles().get(i));
+
+			if (totalWeight < (tempWeight/Tester.MAX_JOINT_STEP)) {
+				totalWeight = (int) (tempWeight/Tester.MAX_JOINT_STEP);
 			}
 		}
-		
-		totalWeight += (tempWeight/Tester.MAX_JOINT_STEP);
 		
 		return totalWeight;
 	}

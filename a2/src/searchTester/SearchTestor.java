@@ -23,19 +23,19 @@ public class SearchTestor {
 		joint.add(0.5);
 		dagraph.addLoc(new Vertex(new ArmConfig(new Point2D.Double(0.5,0.2), joint)));
 		joint.clear();
-		joint.add(0.7);
-		joint.add(0.2);
-		joint.add(0.6);
+		joint.add(0.4);
+		joint.add(1.0);
+		joint.add(0.5);
 		dagraph.addLoc(new Vertex(new ArmConfig(new Point2D.Double(0.2,0.1), joint)));
 		joint.clear();
-		joint.add(0.9);
 		joint.add(0.4);
+		joint.add(1.0);
 		joint.add(0.5);
 		dagraph.addLoc(new Vertex(new ArmConfig(new Point2D.Double(0.2,0.2), joint)));
 		joint.clear();
-		joint.add(0.3);
-		joint.add(0.2);
 		joint.add(0.4);
+		joint.add(0.3);
+		joint.add(0.5);
 		dagraph.addLoc(new Vertex(new ArmConfig(new Point2D.Double(0,0), joint)));
 
 		int count = 0;

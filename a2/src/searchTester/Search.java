@@ -65,7 +65,7 @@ public class Search {
 	    	
 
 	    	if (e.getV2().equals(x.getLocations().get(1)) || e.getV2().equals(x.getLocations().get(1))) {
-	    		System.out.println(e.getV1().getC().getBaseCenter()+ " to " + e.getV2().getC().getBaseCenter() + " Cost: " + cost);
+	    		System.out.println(e.getV1().getC().getBaseCenter()+ " to " + e.getV2().getC().getBaseCenter() + " Cost: " + e.getWeight());
 	    	}
 	    	
 	    	
@@ -106,6 +106,16 @@ public class Search {
 		return solution;
 	}
 	
+	
+	/*
+	 Calculates number of primitive steps needed to reach goal as heuristic
+	 
+	 Calculations based on the fact that each joint and the chair moves independently.
+	 
+	 Therefore the number of primitive steps = the highest number of primitive steps taken by a single joint or chair.
+	 
+	 */
+	
 	public double calculateHeuristic(ArmConfig a) {
 		
 		int totalH = 0;
@@ -117,22 +127,17 @@ public class Search {
 		Point2D tempv1 = vee1.getBaseCenter();
 		Point2D tempv2 = vee2.getBaseCenter();
 		
-		tempH += Math.abs(tempv1.getY() - tempv2.getY()) + Math.abs(tempv1.getX() - tempv2.getX());
+		tempH = Math.abs(tempv1.getY() - tempv2.getY()) + Math.abs(tempv1.getX() - tempv2.getX());
 		
-		totalH += (tempH/0.001);
-		
-		
-		tempH = 0;
+		totalH = (int) (tempH/0.001);
 		
 		for (int i=0; i < vee1.getJointCount(); i++) {
-			if(vee1.getJointAngles().get(i) == vee2.getJointAngles().get(i)) {
-				tempH += 0;
-			} else {
-				tempH += Math.abs(vee2.getJointAngles().get(i) - vee1.getJointAngles().get(i));
+			tempH = Math.abs(vee2.getJointAngles().get(i) - vee1.getJointAngles().get(i));
+
+			if (totalH < (tempH/Tester.MAX_JOINT_STEP)) {
+				totalH = (int) (tempH/Tester.MAX_JOINT_STEP);
 			}
 		}
-		
-		totalH += (tempH/Tester.MAX_JOINT_STEP);
 		
 		return totalH;
 	}

@@ -11,7 +11,7 @@ import problem.ArmConfig;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
-public class search {
+public class Search {
 	
 	public List<ArmConfig> searcher(Graph x, Vertex end) {
 		
@@ -36,9 +36,6 @@ public class search {
 		}});
 		
 		Graph environment = x;
-		
-		//Result
-		List<Vertex> result = new ArrayList<Vertex>();
 		
 		//Init list for explored nodes
 		List<Vertex> explored = new ArrayList<Vertex>();
@@ -103,7 +100,6 @@ public class search {
 	
 	//Prints error message if solution does not exist
 		System.out.println("Solution does not exist.");
-		result = null;
 		return solution;
 	}
 	

@@ -13,19 +13,18 @@ import java.awt.geom.Point2D;
 
 public class Search {
 	
-	public List<ArmConfig> searcher(Graph x, Vertex end) {
+	public List<ArmConfig> searcher(Graph x) {
 		
 		List<ArmConfig> solution = new ArrayList<ArmConfig>();
 		
 		//Builds list of points in goal for comparison purposes
 		List<Point2D> fin = new ArrayList<Point2D>();	
 		
-		fin.add(end.getC().getBaseCenter());
+		fin.add(x.getVertexById(1).getC().getBaseCenter());
 		
-		for(Line2D e: end.getC().getLinks()) {
+		for(Line2D e: x.getVertexById(1).getC().getLinks()) {
 			fin.add(e.getP2());
 		}
-		
 		
 		//Priority queue init
 		PriorityQueue<Vertex> queue = new PriorityQueue<Vertex>(10, new Comparator<Vertex>() {
@@ -53,7 +52,7 @@ public class Search {
 	    Vertex current = queue.poll();
 	    
 	    //Runs if solution found
-	    if(current.getId() == end.getId()){
+	    if(current.getId() == 1){
 	    	System.out.println("Solution FOund!");
 	    	solution = resultBuilder(current);
 	    	return solution;

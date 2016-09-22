@@ -12,8 +12,11 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
 public class Search {
-	
-	public List<ArmConfig> searcher(Graph x) {
+	Graph x;
+	public Search(Graph x){
+		this.x = x;
+	}
+	public List<ArmConfig> searcher() {
 		
 		List<ArmConfig> solution = new ArrayList<ArmConfig>();
 		

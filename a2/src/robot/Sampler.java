@@ -31,10 +31,19 @@ public class Sampler {
 	
 	Tester tester;
 	
+	Search searcher;
+	
 	public Sampler(Tester tester){
 		this.tester = tester;
 		this.specs = tester.getPs();
 		this.obstacles = specs.getObstacles();
+		Vertex start = new Vertex(specs.getInitialState());
+		start.setId(0);
+		Vertex end = new Vertex(specs.getGoalState());
+		end.setId(1);
+		configSpace.addLoc(start);
+		configSpace.addLoc(end);
+		this.searcher = new Search(configSpace);
 	}
 	/**
 	 * Exp3 Sampling stategy implementation
@@ -48,9 +57,9 @@ public class Sampler {
 	 * r = if Num of components in the roadmap increases/decreases
 	 *  
 	 * 
-	 *@return a Config space graph
+	 *@returns the Graph graph with 10 more samples in it 
 	 */
-	public Graph sampleConfigSpace(Graph graph){
+	public Graph sampleConfigSpace(){
 		//Initialise result
 		//Graph result = new Graph();
 		//Randomly generate n
@@ -88,8 +97,8 @@ public class Sampler {
 					r = 0;
 					if(!s.equals(null)){
 						v.setId(counter++); 
-						graph.addLoc(v); 
-						int i = graph.generateEdge(v,obstacles,tester).size();
+						configSpace.addLoc(v); 
+						int i = configSpace.generateEdge(v,obstacles,tester).size();
 						if(i>0)
 							r =1;
 					}
@@ -100,9 +109,11 @@ public class Sampler {
 					strats.get(strats.indexOf(s)).setWeight( s.getWeight()*Math.exp(((n*r)/s.getProb())/k ));
 					
 				}
-				//isPathFound = search.//search graph here
+				List<ArmConfig> path = searcher.searcher();
+				specs.setPath(path);
+				isPathFound = !(path.isEmpty());
 			}else{
-			return graph;
+				return configSpace;
 			}
 		}
 	}

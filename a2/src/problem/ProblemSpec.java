@@ -1,5 +1,8 @@
 package problem;
 
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.AffineTransform;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -9,6 +12,8 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+
+import robot.Sampler;
 
 /**
  * This class represents the specifications of a given problem and solution;
@@ -188,7 +193,89 @@ public class ProblemSpec {
 		path = new ArrayList<ArmConfig>();
 		path.add(initialState);
 		path.add(goalState);
+		splitDirectPath(initialState,goalState);
 		solutionLoaded = true;
+	}
+	/**
+	 * We have assumed that there is a direct solution therefore 
+	 * all indexes can be put on the segment [init,goal] at distance D from each other
+	 * rotating at max Angle step or less until reaching desired config
+	 */
+	public void splitDirectPath(ArmConfig init, ArmConfig goal){
+		System.out.println(path);
+		ArmConfig step = init;
+		AffineTransform af = new AffineTransform();
+		double distX = goal.getBaseCenter().getX()- init.getBaseCenter().getX();
+		double distY = goal.getBaseCenter().getY()- init.getBaseCenter().getY();
+		int signX = (int) (distX/Math.abs(distX));
+		int signY = (int)(distY/Math.abs(distY));
+		List<Double> angleToCover = new ArrayList<Double>();
+		for(int i =0; i<goal.getJointCount();i++){
+			angleToCover.add(goal.getJointAngles().get(i)-init.getJointAngles().get(i));
+		}
+		while(distX>0 || distY>0){
+			if(distY>=Sampler.CHAIR_STEP&& distX>=Sampler.CHAIR_STEP){
+				af.setToTranslation(Sampler.CHAIR_STEP*signX, Sampler.CHAIR_STEP*signY);
+				distX=distX-Sampler.CHAIR_STEP;
+				distY-=Sampler.CHAIR_STEP;
+			}else{
+				if(distY>=Sampler.CHAIR_STEP&& distX<Sampler.CHAIR_STEP){
+					af.setToTranslation(distX*signX, Sampler.CHAIR_STEP*signY);
+					distX=0;
+					distY-=Sampler.CHAIR_STEP;
+				}
+			
+				if(distY<Sampler.CHAIR_STEP&& distX>=Sampler.CHAIR_STEP){
+					af.setToTranslation(Sampler.CHAIR_STEP*signX, distY*signY);
+					distX-=Sampler.CHAIR_STEP;
+					distY=0;
+				}
+				
+				if(distY<Sampler.CHAIR_STEP&& distX<Sampler.CHAIR_STEP){
+					af.setToTranslation(distX*signX,distY*signY);
+					distX=0;
+					distY=0;
+				}
+			}
+			
+			/*if(distY>=Sampler.CHAIR_STEP&& distX>=Sampler.CHAIR_STEP){
+				af.setToTranslation(Sampler.CHAIR_STEP*signX, Sampler.CHAIR_STEP*signY);
+				distX-=Sampler.CHAIR_STEP;
+				distY-=Sampler.CHAIR_STEP;
+			}else{
+				if(distY>=Sampler.CHAIR_STEP||distX>=0){
+					af.setToTranslation(distX*signX, Sampler.CHAIR_STEP*signY);
+					distX=0;
+					distY-=Sampler.CHAIR_STEP;
+				}else{
+				if(distX>=Sampler.CHAIR_STEP&&){
+					af.setToTranslation(Sampler.CHAIR_STEP*signX, distY*signY);
+					distX-=Sampler.CHAIR_STEP;
+					distY=0;
+				}else{
+						af.setToIdentity();
+						//Here we should be done 
+					}
+				}
+			}*/
+			 
+			 Point2D base = new Point2D.Double();
+			 af.transform(step.getBaseCenter(), base);
+			 List<Double>rotate = new ArrayList<Double>();
+			 for(int i =0;i<angleToCover.size();i++){
+				 double remaining = angleToCover.get(i);
+				 if(remaining<Sampler.ANGLE_STEP){
+				 	rotate.add(step.getJointAngles().get(i)+remaining);
+				}else{
+					rotate.add(step.getJointAngles().get(i)+Sampler.ANGLE_STEP);
+				}
+			}
+			 ArmConfig nextStep = new ArmConfig(base,rotate);
+			 path.add(path.indexOf(step)+1,nextStep);
+			 step = nextStep;
+			 System.out.println(" Next step: "+nextStep);
+		}
+			 
 	}
 
 	/**

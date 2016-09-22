@@ -365,4 +365,9 @@ public class ArmConfig {
         chair.add(new Line2D.Double(x1 - halfWidth, y1 - halfWidth, x1 - halfWidth, y1 + halfWidth));
     }
 
+	public void setJointAngles(List<Double>angles) {
+		this.jointAngles=angles;
+		
+	}
+
 }

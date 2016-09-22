@@ -20,8 +20,10 @@ public class Sampler {
 	boolean isPathFound;
 	//keep track of amount of vertices sampled
     int counter = 2; //id 0,1 are reserved for init and goal vertices
-	//Distance D we are working with
-	static final float D = (float)0.1;
+	//Distance D we are working with ( = max step)
+	public static final double D = 0.1;
+	public static final double CHAIR_STEP = 0.001;
+	public static final double ANGLE_STEP = 0.1*(Math.PI/180);
 	//result
 	Graph configSpace = new Graph();
 	//List of obstacle defining the workspace
@@ -162,12 +164,12 @@ public class Sampler {
 	 */
 	public Vertex nearObstacleSampling(){
 		 //loop until we find a config that works, might need to take this off to account for weighting.
-		//sample q1 uniformely at random
+		//Choose a sampling q1 randomly from the config space
 		Vertex q1 = randomSampling();
-		//Sample q2 uniformely at random from the set of all configs withing Distance D
+		//Sample q2 uniformely at random from the set of all configs withing Distance D and with joint angles within max step
 		Vertex q2 = new Vertex(new ArmConfig(new Point2D.Double(
 					(q1.getC().getBaseCenter().getX() +Math.random()*D),(q1.getC().getBaseCenter().getY()+Math.random()*D)),
-					randomSampling().getC().getJointAngles())); 
+					makeRandomAngleStep(q1))); 
 		//Check that the configs are valid
 		/*for(Obstacle o : obstacles){
 			if (q1valid&& o.getRect().contains(q1.getC().getBaseCenter())){
@@ -188,6 +190,8 @@ public class Sampler {
 		//We didnt find a valid config
 		return null;
 	}
+	
+	
 	/**
 	 * 
 	 * @return a config sampled between 2 obstacles
@@ -197,7 +201,7 @@ public class Sampler {
 		Vertex q1 = randomSampling();
 		Vertex q2 = new Vertex(new ArmConfig(new Point2D.Double(
 				(q1.getC().getBaseCenter().getX() +Math.random()*D),(q1.getC().getBaseCenter().getY()+Math.random()*D)),
-				randomSampling().getC().getJointAngles()));
+				makeRandomAngleStep(q1)));
 		q1valid = ! tester.hasCollision(q1.getC(), obstacles)&& tester.hasValidJointAngles(q1.getC())&& !tester.hasSelfCollision(q1.getC());
 		q2valid = ! tester.hasCollision(q2.getC(), obstacles)&& tester.hasValidJointAngles(q2.getC())&& !tester.hasSelfCollision(q2.getC());
 		
@@ -213,6 +217,15 @@ public class Sampler {
 		//We didnt find a valid config
 		return null;
 	}
+	
+	private List<Double> makeRandomAngleStep(Vertex q1){
+		List<Double> result = new ArrayList<Double>();
+		for(double d:q1.getC().getJointAngles()){
+			result.add(d+Math.random()*ANGLE_STEP);
+		}
+		return result;
+	}
+	
 	private enum SamplingStrat{
 		UAR,nearOBS,betweenOBS;
 	}

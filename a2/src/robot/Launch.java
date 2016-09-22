@@ -11,7 +11,7 @@ public class Launch {
 
 	public static void main(String[] args) {
 		double maxError = Tester.DEFAULT_MAX_ERROR;
-		boolean verbose = false;
+		boolean verbose = true;
 		String problemPath = null;
 		String solutionPath = null;
 		for (int i = 0; i < args.length; i++) {
@@ -58,8 +58,13 @@ public class Launch {
 
 		} else {
 			//Else generate the solution
+			
 			Sampler sampler = new Sampler(tester);
+			if(tester.getPs().getObstacles().isEmpty()){
+				sampler.specs.assumeDirectSolution();
+			}else{
 			sampler.sampleConfigSpace();
+			}
 			solutionPath =sampler.specs.getPath().toString();
 			//tester.getPs().assumeDirectSolution();
 		}

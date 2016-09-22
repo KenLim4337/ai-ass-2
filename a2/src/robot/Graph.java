@@ -33,8 +33,10 @@ public class Graph implements Cloneable {
 	}
 	
 	public void addLoc(Vertex loc){
-		if(!locations.contains(loc))
+		if(!locations.contains(loc)){
 			locations.add(loc);
+			numberOfLocation++;
+		}
 	}
 	
 	public void addE(Edge e){
@@ -173,5 +175,10 @@ public class Graph implements Cloneable {
 			
 		}
 		return d;
+	}
+	
+	public Vertex getRandom(){
+		int index =Double.valueOf(Math.random()*this.getNumberOfLocation()).intValue(); // this will always round down
+		return this.getVertexById(index);	
 	}
 }

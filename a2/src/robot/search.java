@@ -1,6 +1,7 @@
 package robot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -12,7 +13,10 @@ import java.awt.geom.Point2D;
 
 public class search {
 	
-	public void searcher(Graph x, Vertex end) {
+	public List<ArmConfig> searcher(Graph x, Vertex end) {
+		
+		List<ArmConfig> solution = new ArrayList<ArmConfig>();
+		
 		//Builds list of points in goal for comparison purposes
 		List<Point2D> fin = new ArrayList<Point2D>();	
 		
@@ -53,14 +57,9 @@ public class search {
 	    
 	    //Runs if solution found
 	    if(current.getId() == end.getId()){
-	    	/*
-	    	//Print check
-	    	System.out.print("Cost: " + current.getPath() + " |");
-	    	System.out.print(" Depth: " + (result.size() - 1) + " |");
-	    	System.out.print(" Explored: " + (explored.size()) + " Nodes |");
-	    	//return result;
-	    	 * 
-	    	 */
+	    	System.out.println("Solution FOund!");
+	    	solution = resultBuilder(current);
+	    	return solution;
 	    }
     
 	    //Marks node as explored
@@ -105,7 +104,7 @@ public class search {
 	//Prints error message if solution does not exist
 		System.out.println("Solution does not exist.");
 		result = null;
-		return;
+		return solution;
 	}
 	
 	public double calculateHeuristic(ArmConfig a, List<Point2D> goal) {
@@ -135,4 +134,19 @@ public class search {
 		}
 		return configH;
 	}
+	
+	
+	 public static List<ArmConfig> resultBuilder(Vertex x) {
+	    	List<ArmConfig> built = new ArrayList<ArmConfig>();
+	    	for (Vertex i = x; i != null; i = i.getParent()) {
+	    		built.add(i.getC());
+	    	}
+	    	
+	    	built.add(x.getC());
+	    	
+	    	Collections.reverse(built);
+	    	
+	    	return built;
+	    }
+	
 }

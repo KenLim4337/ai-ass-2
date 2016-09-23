@@ -7,27 +7,21 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import problem.ArmConfig;
+import tester.Tester;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
 public class Search {
 	Graph x;
+	
 	public Search(Graph x){
 		this.x = x;
 	}
+	
 	public List<ArmConfig> searcher() {
 		
 		List<ArmConfig> solution = new ArrayList<ArmConfig>();
-		
-		//Builds list of points in goal for comparison purposes
-		List<Point2D> fin = new ArrayList<Point2D>();	
-		
-		fin.add(x.getVertexById(1).getC().getBaseCenter());
-		
-		for(Line2D e: x.getVertexById(1).getC().getLinks()) {
-			fin.add(e.getP2());
-		}
 		
 		//Priority queue init
 		PriorityQueue<Vertex> queue = new PriorityQueue<Vertex>(10, new Comparator<Vertex>() {
@@ -55,7 +49,7 @@ public class Search {
 	    Vertex current = queue.poll();
 	    
 	    //Runs if solution found
-	    if(current.getId() == 1){
+	    if(current.equals(x.getLocations().get(1))){
 	    	System.out.println("Solution FOund!");
 	    	solution = resultBuilder(current);
 	    	return solution;
@@ -69,14 +63,20 @@ public class Search {
 	    	
 	    	double cost = e.getWeight() + current.getPathCost();
 	    	
+
+	    	if (e.getV2().equals(x.getLocations().get(1)) || e.getV2().equals(x.getLocations().get(1))) {
+	    		System.out.println(e.getV1().getC().getBaseCenter()+ " to " + e.getV2().getC().getBaseCenter() + " Cost: " + e.getWeight());
+	    	}
+	    	
+	    	
 	    	//Checks if destination already explored or if there is a shorter path to destination
-	    	if (explored.contains(e.getV2()) || environment.getVertexById(e.getV2().getId()).getPathCost() < cost) {                	
+	    	if (explored.contains(e.getV2()) || e.getV2().getPathCost() < cost) {   
 	    		continue;
 	    	}
 	    	
 	    	//Calculates heuristic of next vertex and sets it if it is not already set.
 	    	if(e.getV2().getH() == -1) {
-		    	double heuristic = calculateHeuristic(e.getV2().getC(), fin);
+		    	double heuristic = calculateHeuristic(e.getV2().getC());
 		    	e.getV2().setH(heuristic);
 	    	}
 	    	
@@ -100,47 +100,54 @@ public class Search {
 	
 	}
 	
+		
 	//Prints error message if solution does not exist
 		System.out.println("Solution does not exist.");
 		return solution;
 	}
 	
-	public double calculateHeuristic(ArmConfig a, List<Point2D> goal) {
-		//Get list of point 2Ds for comparison
-		List<Point2D> comp = new ArrayList<Point2D>();	
-		double configH = 0;
+	
+	/*
+	 Calculates number of primitive steps needed to reach goal as heuristic
+	 
+	 Calculations based on the fact that each joint and the chair moves independently.
+	 
+	 Therefore the number of primitive steps = the highest number of primitive steps taken by a single joint or chair.
+	 
+	 */
+	
+	public double calculateHeuristic(ArmConfig a) {
 		
-		comp.add(a.getBaseCenter());
+		int totalH = 0;
+		double tempH = 0;
 		
-		for(Line2D e: a.getLinks()) {
-			comp.add(e.getP2());
-		}
+		ArmConfig vee1 = a;
+		ArmConfig vee2 = x.getLocations().get(1).getC();
 		
-		//Gets direct distance between current point and goal
-		for (int i=0; i < comp.size(); i++) {
-			Point2D tempcomp = comp.get(i);
-			Point2D tempgoal = goal.get(i);
-			if(tempcomp == tempgoal) {
-				configH += 0;
-			}else if (tempcomp.getX() == tempgoal.getX()) {
-				configH += Math.abs(tempcomp.getY() - tempgoal.getY());
-			}else if (tempcomp.getY() == tempgoal.getY()) {
-				configH += Math.abs(tempcomp.getX() - tempgoal.getX());
-			}else {
-				configH += Math.sqrt((Math.abs(tempcomp.getY() - tempgoal.getY()) + (Math.abs(tempcomp.getX() - tempgoal.getX()))));
+		Point2D tempv1 = vee1.getBaseCenter();
+		Point2D tempv2 = vee2.getBaseCenter();
+		
+		tempH = Math.abs(tempv1.getY() - tempv2.getY()) + Math.abs(tempv1.getX() - tempv2.getX());
+		
+		totalH = (int) (tempH/0.001);
+		
+		for (int i=0; i < vee1.getJointCount(); i++) {
+			tempH = Math.abs(vee2.getJointAngles().get(i) - vee1.getJointAngles().get(i));
+
+			if (totalH < (tempH/Tester.MAX_JOINT_STEP)) {
+				totalH = (int) (tempH/Tester.MAX_JOINT_STEP);
 			}
 		}
-		return configH;
+		
+		return totalH;
 	}
 	
-	
-	 public static List<ArmConfig> resultBuilder(Vertex x) {
+	//Build the result of the search using parent values
+	 public static List<ArmConfig> resultBuilder(Vertex dest) {
 	    	List<ArmConfig> built = new ArrayList<ArmConfig>();
-	    	for (Vertex i = x; i != null; i = i.getParent()) {
+	    	for (Vertex i = dest; i != null; i = i.getParent()) {
 	    		built.add(i.getC());
 	    	}
-	    	
-	    	built.add(x.getC());
 	    	
 	    	Collections.reverse(built);
 	    	

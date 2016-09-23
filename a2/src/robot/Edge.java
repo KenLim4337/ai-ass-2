@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import problem.ArmConfig;
+import tester.Tester;
 
 public class Edge {
 	Vertex v1;
@@ -46,40 +47,37 @@ public class Edge {
 		return this.v2;
 	}
 	
-	//Returns net movement from initial vertex to end vertex as weight
-	public double weightFinder() {
-		double totalWeight = 0;
-		List<Point2D> v1Pts = new ArrayList<Point2D>();	
-		List<Point2D> v2Pts = new ArrayList<Point2D>();	
+	/*Calculates number of primitive steps from initial vertex to next vertex as weight
+	 
+	 Calculations based on the fact that each joint and the chair moves independently.
+	 
+	 Therefore the number of primitive steps = the highest number of primitive steps taken by a single joint or chair.
+	
+	*/
+	public int weightFinder() {
+		
+		int totalWeight = 0;
+		double tempWeight = 0;
 		
 		ArmConfig vee1 = this.v1.getC();
 		ArmConfig vee2 = this.v2.getC();
 		
-		v1Pts.add(vee1.getBaseCenter());
 		
-		for(Line2D e: vee1.getLinks()) {
-			v1Pts.add(e.getP2());
-		}
+		Point2D tempv1 = vee1.getBaseCenter();
+		Point2D tempv2 = vee2.getBaseCenter();
 		
-		v2Pts.add(vee2.getBaseCenter());
+		tempWeight = Math.abs(tempv1.getY() - tempv2.getY()) + Math.abs(tempv1.getX() - tempv2.getX());
 		
-		for(Line2D e: vee2.getLinks()) {
-			v2Pts.add(e.getP2());
-		}
+		totalWeight = (int) (tempWeight/0.001);
 		
-		for (int i=0; i < v1Pts.size(); i++) {
-			Point2D tempv1 = v1Pts.get(i);
-			Point2D tempv2 = v2Pts.get(i);
-			if(tempv1 == tempv2) {
-				totalWeight += 0;
-			}else if (tempv1.getX() == tempv2.getX()) {
-				totalWeight += Math.abs(tempv1.getY() - tempv2.getY());
-			}else if (tempv1.getY() == tempv2.getY()) {
-				totalWeight += Math.abs(tempv1.getX() - tempv2.getX());
-			}else {
-				totalWeight += Math.sqrt((Math.abs(tempv1.getY() - tempv2.getY()) + (Math.abs(tempv1.getX() - tempv2.getX()))));
+		for (int i=0; i < vee1.getJointCount(); i++) {
+			tempWeight = Math.abs(vee2.getJointAngles().get(i) - vee1.getJointAngles().get(i));
+
+			if (totalWeight < (tempWeight/Tester.MAX_JOINT_STEP)) {
+				totalWeight = (int) (tempWeight/Tester.MAX_JOINT_STEP);
 			}
 		}
+		
 		return totalWeight;
 	}
 	

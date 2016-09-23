@@ -87,20 +87,21 @@ public class Graph implements Cloneable {
 		vertexLoop: for(Vertex v1: this.getLocations()){
 			//Create the appropriate Armconfigs to get from v to v1)
 			if(!v.equals(v1)){
-				List<ArmConfig> p = splitDirectPath(v.getC(),v1.getC());
+				//List<ArmConfig> p = splitDirectPath(v.getC(),v1.getC());
 				//System.out.println("Printing P: "+p);
-				 for(int i=0;i< p.size()-1;i++ ){
-					 isValid = isValid&&checkLineValid(p.get(i),p.get(i+1),obs);
+				//for(int i=0;i< p.size()-1;i++ ){
+		
+					 isValid = isValid&&checkLineValid(v.getC(),v1.getC(),obs);
 					 if(!isValid){
 						 continue vertexLoop;
 					 }else{
-						 Vertex vTmp =new Vertex(p.get(i+1));
-						 this.addLoc(vTmp);
-						 Edge e = new Edge(prev, vTmp);
+						 //Vertex vTmp =new Vertex(p.get(i+1));
+						 //this.addLoc(vTmp);
+						 Edge e = new Edge(v, v1);
 						 this.addE(e);
-						 prev = vTmp;
+						 //prev = vTmp;
 					 }
-				 }
+				 //}
 				//If we reach this code the edge (v,v1) is valid and so are all the steps form v to v1
 			 
 			}
@@ -156,7 +157,9 @@ public class Graph implements Cloneable {
 		if(circle1.contains(chair)&&circle2.contains(chair)){
 			return true;
 		}else{
-			return checkLineValid(c1,c3,obs)&&checkLineValid(c3,c2,obs); //STACKOVERFLOW 
+			boolean a = checkLineValid(c1,c3,obs);
+			boolean b = checkLineValid(c3,c2,obs);
+			return a&&b;//STACKOVERFLOW 
 		}
 	}
 	
@@ -165,28 +168,18 @@ public class Graph implements Cloneable {
 		double[] coords = new double[6];
 		//For each obstacle
 		for(Obstacle o : obs){
-			//Iterate over path
-			for (PathIterator it = o.getRect().getPathIterator(null); !it.isDone(); it.next()){
-				//retrieve coords of segment
-				it.currentSegment(coords);
-				Point2D a = new Point2D.Double(coords[0],coords[1]);
-				it.next();
-				it.currentSegment(coords);
-				Point2D b = new Point2D.Double(coords[0],coords[1]);
-				//define the line l from retrieved coords
-				Line2D l = new Line2D.Double(a, b);
-				//for each link in the chair
-				for(Line2D l1: c.getLinks()){
-					//retrieve end and start point
-					//add griper case here to later on
-					//in all cases the smallest distance between 2lines will be one of the end point of a line and a point on the other line
-					Point2D p1 = l1.getP1();
-					Point2D p2 = l1.getP2();
-					double dist = Math.min(Math.min(l1.ptLineDist(l.getP1()), l1.ptLineDist(l.getP2())), Math.min(l.ptLineDist(p1),l.ptLineDist(p2)));
-					d = (d< dist)? dist: d;
-				}
+			double x = o.getRect().getX();
+			double y = o.getRect().getY();
+			double width =  o.getRect().getWidth();
+			double height = o.getRect().getHeight();
+			Point2D p1 = new Point2D.Double(x,y);
+			Point2D p2 =new Point2D.Double(x+width,y);
+			Point2D p3 = new Point2D.Double(x+width,y-height);
+			Point2D p4 = new Point2D.Double(x,y-height);
+			for(Line2D l1: c.getLinks()){
+				double dist = Math.min(Math.min(l1.ptLineDist(p1), l1.ptLineDist(p2)), Math.min(l1.ptLineDist(p3), l1.ptLineDist(p4)));
+				d = (d< dist)? dist: d;
 			}
-			
 		}
 		return d;
 	}

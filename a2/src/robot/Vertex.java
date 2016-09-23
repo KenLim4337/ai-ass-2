@@ -7,7 +7,7 @@ import java.util.List;
 import problem.ArmConfig;
 
 public class Vertex {
-	int id;
+	//int id;
 	List<Edge> edges;
 	double pathCost = Integer.MAX_VALUE;//Max value by default
 	double h = -1;
@@ -18,7 +18,7 @@ public class Vertex {
 	 * Creates a new vertex
 	 */
 	public Vertex(){
-		this.id =-1;
+		//this.id =-1;
 		this.edges = new ArrayList<Edge>();
 	}
 	
@@ -28,7 +28,7 @@ public class Vertex {
 	}
 	
 	public Vertex(int id,double x, double y) {
-		this.id = id;
+		//this.id = id;
 		this.c.getBaseCenter().setLocation(x, y);
 	}
 	
@@ -38,14 +38,14 @@ public class Vertex {
 	}
 
 	public Vertex(int id, ArrayList<Edge>edges,double x, double y){
-		this.id =id;
+		//this.id =id;
 		this.edges = edges;
 		this.c.getBaseCenter().setLocation(x, y);
 	}
 	
-	public int getId() {
-		return this.id;
-	}
+	//public int getId() {
+	//	return this.id;
+	//}
 	
 	public void setEdges(ArrayList<Edge>edges){
 		this.edges = edges;
@@ -88,7 +88,7 @@ public class Vertex {
 	public int hashCode() {
 		final int prime = 3;
 		int result = 1;
-		result = prime * result + id;
+		result = prime * result + c.hashCode();
 		//result = prime * result + ((edges == null) ? 0 : edges.hashCode());
 		return result;
 	}
@@ -109,9 +109,9 @@ public class Vertex {
 
 	
 
-	public void setId(int id) {
-		this.id = id;
-	}
+	//public void setId(int id) {
+	//	this.id = id;
+	//}
 
 
 	public void setEdges(List<Edge> edges) {
@@ -133,7 +133,7 @@ public class Vertex {
 	}
 	
 	public String toString() {
-		return ""+getId();
+		return "Vertex : "+c.toString();//getId();
 	}
 	
 	public void setParent(Vertex x) {

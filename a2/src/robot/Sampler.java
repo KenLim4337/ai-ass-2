@@ -43,9 +43,7 @@ public class Sampler {
 		this.specs = specs;
 		this.obstacles = specs.getObstacles();
 		Vertex start = new Vertex(specs.getInitialState());
-		start.setId(0);
 		Vertex end = new Vertex(specs.getGoalState());
-		end.setId(1);
 		configSpace.addLoc(start);
 		configSpace.addLoc(end);
 		//see if an edge can be generated directly from start to end;
@@ -91,19 +89,17 @@ public class Sampler {
 				//Add 10 samples to the graph
 				while(started> counter-10){
 					weightedStrat s = chooseStrat(strats);// set something different here to be defined when we know what we will do for search
-					Vertex v;
+					Vertex v=null;
 					switch(s.getStrat()){
 						case UAR: v = randomSampling(); 
 						break;
 						case betweenOBS:v = sampleInsidePassage();
 						break;
 						case nearOBS: v = nearObstacleSampling();
-						default:
-							v =null;
+						break;
 					}
 					r = 0;
-					if(!s.equals(null)){
-						v.setId(counter++); 
+					if(!v.equals(null)){
 						configSpace.addLoc(v); 
 						int i = configSpace.generateEdge(v,obstacles).size();
 						if(i>0)
@@ -200,20 +196,14 @@ public class Sampler {
 	 * @return  config sampled near an obstacle or null if none found.
 	 */
 	public Vertex nearObstacleSampling(){
-		boolean q1Valid= true,q2Valid=true;
+		
 		//Choose a sampling q1 randomly from the config space
 		Vertex q1 = randomSampling();
 		//Sample q2 uniformely at random from the set of all configs withing Distance D and with joint angles within max step
 		Vertex q2 = randomSamplingFrom(q1.getC());
 		//Check wether the configs are collidng with obstacles.
-		for(Obstacle o : obstacles){
-			if (q1Valid&& o.getRect().intersects(q1.getC().getChairAsRect())){
-				q1Valid = false;
-			}
-			if(q2Valid&&o.getRect().intersects(q2.getC().getChairAsRect())){
-				q2Valid = false;
-			}
-		}
+		boolean q1Valid=configSpace.testCollision(q1.getC(), obstacles),
+				q2Valid=configSpace.testCollision(q2.getC(), obstacles);
 		//if one of the 2 is  and the other isn't then we have a sampling near an obstacle
 		
 		if(!q1Valid&&q2Valid){
@@ -231,34 +221,28 @@ public class Sampler {
 	 * @return a config sampled between 2 obstacles or null if notne found
 	 */
 	public Vertex sampleInsidePassage(){
-		boolean q1Valid=true,q2Valid=true;
+		
 		Vertex q1 = randomSampling();
 		Vertex q2 = randomSamplingFrom(q1.getC());
 		
-		for(Obstacle o : obstacles){
-			if (q1Valid&& o.getRect().intersects(q1.getC().getChairAsRect())){
-				q1Valid = false;
-			}
-			if(q2Valid&&o.getRect().intersects(q2.getC().getChairAsRect())){
-				q2Valid = false;
-			}
-		}
-		
-		if(q1Valid == false && q2valid == false){
+		boolean q1Valid=configSpace.testCollision(q1.getC(), obstacles),
+				q2Valid=configSpace.testCollision(q2.getC(), obstacles);
+		if(q1Valid == false && q2Valid == false){
 			double x = (q1.getC().getBaseCenter().getX()+q2.getC().getBaseCenter().getX())/2;
 			double y = (q1.getC().getBaseCenter().getY()+q2.getC().getBaseCenter().getY())/2;
-			ArmConfig cm = new ArmConfig(new Point2D.Double(x,y),randomSampling().getC().getJointAngles());
-			boolean qmvalid =! tester.hasCollision(cm, obstacles)&& tester.hasValidJointAngles(cm)&& !tester.hasSelfCollision(cm);
-			if(qmvalid){
+			ArmConfig cm = new ArmConfig(new Point2D.Double(x,y),randomSamplingFrom(q1.getC()).getC().getJointAngles());
+			boolean cmValid = true;
+			for(Obstacle o : obstacles){
+				if (cmValid&& o.getRect().intersects(cm.getChairAsRect())){
+					cmValid = false;
+				}
+			}
+			if(cmValid){
 				return new Vertex(cm);
 			}
 		}
 		//We didnt find a valid config
 		return null;
-	}
-	
-	private List<Double> makeRandomAngleStep(Vertex q1){
-		
 	}
 	
 	private enum SamplingStrat{

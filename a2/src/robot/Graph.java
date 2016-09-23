@@ -70,14 +70,6 @@ public class Graph implements Cloneable {
 		this.numberOfLocation = numberOfLocation;
 	}
 	
-	public Vertex getVertexById(int id){
-		for(Vertex v: locations){
-			if(v.getId()==id){
-				return v;
-			}
-		}
-		return null;
-	}
 	
 	@Override
 	public String toString() {
@@ -85,7 +77,7 @@ public class Graph implements Cloneable {
 				+ ", numberOfLocation=" + numberOfLocation + "]";
 	}
 
-	public List<Edge> generateEdge(Vertex v, List<Obstacle>obs,Tester tester){
+	public List<Edge> generateEdge(Vertex v, List<Obstacle>obs){
 		//initialize result
 		ArrayList<Edge> result = new ArrayList<Edge>();
 		Vertex prev = v;
@@ -95,10 +87,10 @@ public class Graph implements Cloneable {
 		vertexLoop: for(Vertex v1: this.getLocations()){
 			//Create the appropriate Armconfigs to get from v to v1)
 			if(!v.equals(v1)){
-				List<ArmConfig> p = splitDirectPath(v.getC(),v1.getC(),tester);
+				List<ArmConfig> p = splitDirectPath(v.getC(),v1.getC());
 				//System.out.println("Printing P: "+p);
 				 for(int i=0;i< p.size()-1;i++ ){
-					 isValid = isValid&&checkLineValid(p.get(i),p.get(i+1),obs,tester);
+					 isValid = isValid&&checkLineValid(p.get(i),p.get(i+1),obs);
 					 if(!isValid){
 						 continue vertexLoop;
 					 }else{
@@ -130,15 +122,20 @@ public class Graph implements Cloneable {
 		
 		return result;
 	}
-
-	private boolean checkLineValid(ArmConfig c1, ArmConfig c2,List<Obstacle>obs,Tester test) {
-		if(test.hasCollision(c1, obs)||test.hasCollision(c2, obs))
+	
+	/**
+	 * @requires c1 & c2 two vertex with max distance = CHAIR_STEP and max angledifferent = ANGLE_STEP
+	 * @param c1 First configuration
+	 * @param c2 Second configuration
+	 * @param obs list of obstacles
+	 * @return Wether the Line between c1 and c2 is valid
+	 */
+	private boolean checkLineValid(ArmConfig c1, ArmConfig c2,List<Obstacle>obs) {
+		if(testCollision(c1, obs)||testCollision(c2, obs))
 			return false;
-		if(!test.isValidStep(c1, c2)){
-			return false;
-		}
-		return true;
-		/*//Compute distance to closest obs for p1 && p2
+		
+		//return true;
+		//Compute distance to closest obs for p1 && p2
 		double distClosestObsP1 = getDistanceToClosestObs(c1, obs);
 		double distClosestObsP2 = getDistanceToClosestObs(c2, obs);
 		/*
@@ -146,7 +143,7 @@ public class Graph implements Cloneable {
 		 * Same as the ellipse in the framing rectangle with top left corner = (X+dist,Y+dist)
 		 * and  with = heigh = dist
 		 */
-		/*Ellipse2D.Double circle1 = new Ellipse2D.Double(c1.getBaseCenter().getX()+distClosestObsP1,c1.getBaseCenter().getY()+distClosestObsP1,distClosestObsP1,distClosestObsP1);
+		Ellipse2D.Double circle1 = new Ellipse2D.Double(c1.getBaseCenter().getX()+distClosestObsP1,c1.getBaseCenter().getY()+distClosestObsP1,distClosestObsP1,distClosestObsP1);
 		Ellipse2D.Double circle2 = new Ellipse2D.Double(c2.getBaseCenter().getX()+distClosestObsP2,c2.getBaseCenter().getY()+distClosestObsP2,distClosestObsP2,distClosestObsP2);
 		//generate c3 = c1+c2/2
 		ArmConfig c3 = new ArmConfig(
@@ -154,20 +151,13 @@ public class Graph implements Cloneable {
 						(c1.getBaseCenter().getX()+c2.getBaseCenter().getX())/2,
 						(c1.getBaseCenter().getY()+c2.getBaseCenter().getY())/2),
 						c1.getJointAngles());
-		//if p3 belongs to c1 and c2 then the segment is collision free, else
-		/*
-		 * the chair is generated as follow
-		 * 1	2
-		 * 4	3
-		 * So point 1 is the one we need for initialising the rectangle
-		 */
-		/*Point2D temp = c3.getChair().get(0).getP1();
-		Rectangle2D chair = new Rectangle2D.Double(temp.getX(), temp.getY(), ArmConfig.CHAIR_WIDTH,  ArmConfig.CHAIR_WIDTH);
+
+		Rectangle2D chair =c3.getChairAsRect();
 		if(circle1.contains(chair)&&circle2.contains(chair)){
 			return true;
 		}else{
-			return checkLineValid(c1,c3,obs,test)&&checkLineValid(c3,c2,obs,test); STACKOVERFLOW 
-		}*/
+			return checkLineValid(c1,c3,obs)&&checkLineValid(c3,c2,obs); //STACKOVERFLOW 
+		}
 	}
 	
 	private double getDistanceToClosestObs(ArmConfig c, List<Obstacle>obs){
@@ -205,12 +195,12 @@ public class Graph implements Cloneable {
 	 * Splits a directPath between 2 ArmConfig into the required steps
 	 * hen returns the appropriate steps as a list of ArmConfigs
 	 */
-	public List<ArmConfig> splitDirectPath(ArmConfig init, ArmConfig goal,Tester tester){
+	public List<ArmConfig> splitDirectPath(ArmConfig init, ArmConfig goal){
 		//System.out.println(path);
 		ArrayList<ArmConfig>result = new ArrayList<ArmConfig>();
 		result.add(init);
 		ArmConfig step = init;
-		if(!tester.isValidStep(init, goal)){
+		if(isValidStep(init, goal)){
 			AffineTransform af = new AffineTransform();
 			double distX = goal.getBaseCenter().getX()- init.getBaseCenter().getX();
 			double distY = goal.getBaseCenter().getY()- init.getBaseCenter().getY();
@@ -220,7 +210,7 @@ public class Graph implements Cloneable {
 			for(int i =0; i<goal.getJointCount();i++){
 				angleToCover.add(goal.getJointAngles().get(i)-init.getJointAngles().get(i));
 			}
-			while(!tester.isValidStep(step, goal)){
+			while(isValidStep(step, goal)){
 				if(distY>=Sampler.CHAIR_STEP&& distX>=Sampler.CHAIR_STEP){
 					af.setToTranslation(Sampler.CHAIR_STEP*signX, Sampler.CHAIR_STEP*signY);
 					distX=distX-Sampler.CHAIR_STEP;
@@ -267,6 +257,40 @@ public class Graph implements Cloneable {
 	
 	public Vertex getRandom(){
 		int index =Double.valueOf(Math.random()*this.getNumberOfLocation()).intValue(); // this will always round down
-		return this.getVertexById(index);	
+		return locations.get(index);	
+	}
+	
+	/**
+	 * Test wether a config is in collision wiht any of the obstacles
+	 * @param c The config to test
+	 * @param obs the list of obstacles
+	 * @return True if colliding wiht obstacle false otherwise
+	 */
+	public boolean testCollision(ArmConfig c, List<Obstacle>obs){
+		List<Line2D>links = c.getLinks();
+		for(Obstacle o : obs){
+			for(Line2D l:links){
+				if(o.getRect().intersectsLine(l))
+					return true;
+			}
+			if(o.getRect().intersects(c.getChairAsRect())){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	
+	public boolean isValidStep(ArmConfig cfg0, ArmConfig cfg1) {
+		if (cfg0.getJointCount() != cfg1.getJointCount()) {
+			return false;
+		} else if (cfg0.maxAngleDiff(cfg1) > Sampler.ANGLE_STEP) {
+			return false;
+		} else if (cfg0.maxGripperDiff(cfg1) > Sampler.CHAIR_STEP ) {
+			return false;
+		} else if (cfg0.getBaseCenter().distance(cfg1.getBaseCenter()) > Sampler.CHAIR_STEP ) {
+			return false;
+		}
+		return true;
 	}
 }

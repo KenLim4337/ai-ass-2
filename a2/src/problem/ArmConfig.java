@@ -382,7 +382,7 @@ public class ArmConfig {
 	
 	@Override
 	public boolean equals(Object other){
-		if (!(other instanceof Vertex))
+		if (!(other instanceof ArmConfig))
 			return false;
 		ArmConfig o = (ArmConfig)other;
 		if(!this.base.equals(o.getBaseCenter()))

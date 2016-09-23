@@ -44,6 +44,7 @@ public class Sampler {
 		this.obstacles = specs.getObstacles();
 		Vertex start = new Vertex(specs.getInitialState());
 		Vertex end = new Vertex(specs.getGoalState());
+		System.out.println("strat : "+start+" end: "+end+" ");
 		configSpace.addLoc(start);
 		configSpace.addLoc(end);
 		//see if an edge can be generated directly from start to end;

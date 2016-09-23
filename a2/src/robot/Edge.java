@@ -106,7 +106,7 @@ public class Edge {
 	
 	@Override
 	public String toString(){
-		return v1.getId()+"-"+v2.getId();
+		return v1.getC()+" - "+v2.getC();
 	}
 
 	

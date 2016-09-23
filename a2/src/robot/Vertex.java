@@ -34,6 +34,7 @@ public class Vertex {
 	
 	public Vertex(ArmConfig c){
 		this.c = c;
+		this.edges = new ArrayList<Edge>();
 	}
 
 	public Vertex(int id, ArrayList<Edge>edges,double x, double y){
@@ -92,16 +93,16 @@ public class Vertex {
 		return result;
 	}
 
+	//Modified this to not use IDs
 	@Override
 	public boolean equals(Object obj) {
 		boolean result = false;
 		if (obj instanceof Vertex){
 			Vertex other = (Vertex) obj;
-			if (id == other.getId()) {
+			if (c.equals(other)) {
 				result = true;
-			} else{ if (c.equals(other.c))
-				result = true;
-			}
+			} 
+			
 		}
 		return result;
 	}

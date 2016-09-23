@@ -8,6 +8,8 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
+import robot.Vertex;
+
 /** 
  * Represents a configuration of the arm, i.e. base x-y coordinates and joint
  * angles. This class doesn't do any validity checking.
@@ -377,5 +379,25 @@ public class ArmConfig {
 		Rectangle2D chair = new Rectangle2D.Double(temp.getX(), temp.getY(), ArmConfig.CHAIR_WIDTH,  ArmConfig.CHAIR_WIDTH);
 		return chair;
 	}
-
+	
+	@Override
+	public boolean equals(Object other){
+		if (!(other instanceof Vertex))
+			return false;
+		ArmConfig o = (ArmConfig)other;
+		if(!this.base.equals(o.getBaseCenter()))
+			return false;
+		
+		if(!this.jointAngles.equals(o.getJointAngles()))
+			return false;
+		
+		if(this.hasGripper()!=o.hasGripper())
+			return false;
+		
+		if(!this.getGripperLengths().equals(o.getGripperLengths()))
+			return false;
+		
+		return true;
+		
+	}
 }

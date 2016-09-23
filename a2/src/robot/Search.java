@@ -40,7 +40,7 @@ public class Search {
 		environment.getLocations().get(0).setPathCost(0);
 		
 		//Add root to PQ
-		queue.add(environment.getVertexById(0));
+		queue.add(environment.getLocations().get(0));
 		
 		//Main PQ Loop
 		while (!queue.isEmpty()){

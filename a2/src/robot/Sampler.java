@@ -6,6 +6,7 @@ import tester.Tester;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
 
@@ -24,6 +25,11 @@ public class Sampler {
 	public static final double D = 0.1;
 	public static final double CHAIR_STEP = 0.001;
 	public static final double ANGLE_STEP = 0.1*(Math.PI/180);
+	public static final double LINK_LENGTH = 0.05;
+	public static final double MIN_JOINT_ANGLE = -150.0 * Math.PI / 180.0;
+	public static final double MAX_JOINT_ANGLE = 150 * Math.PI / 180;
+	public static final double MIN_GRIPPER_LENGTH = 0.03;
+	public static final double MAX_GRIPPER_LENGTH = 0.07;
 	//result
 	Graph configSpace = new Graph();
 	//List of obstacle defining the workspace
@@ -31,13 +37,10 @@ public class Sampler {
 	
 	ProblemSpec specs;
 	
-	Tester tester;
-	
 	Search searcher;
 	
-	public Sampler(Tester tester){
-		this.tester = tester;
-		this.specs = tester.getPs();
+	public Sampler(ProblemSpec specs){
+		this.specs = specs;
 		this.obstacles = specs.getObstacles();
 		Vertex start = new Vertex(specs.getInitialState());
 		start.setId(0);
@@ -45,6 +48,8 @@ public class Sampler {
 		end.setId(1);
 		configSpace.addLoc(start);
 		configSpace.addLoc(end);
+		//see if an edge can be generated directly from start to end;
+		configSpace.generateEdge(start, obstacles);
 		this.searcher = new Search(configSpace);
 	}
 	/**
@@ -100,7 +105,7 @@ public class Sampler {
 					if(!s.equals(null)){
 						v.setId(counter++); 
 						configSpace.addLoc(v); 
-						int i = configSpace.generateEdge(v,obstacles,tester).size();
+						int i = configSpace.generateEdge(v,obstacles).size();
 						if(i>0)
 							r =1;
 					}
@@ -144,68 +149,102 @@ public class Sampler {
 	
 	
 	/**
-	 * 
-	 * @return sample a config q Uniformely at random
+	 *  Samples a valid configuration(i.e no self collisions and the angles are within [min, max] values)
+	 * @return config q  sampled Uniformely at random
 	 */
 	public Vertex randomSampling(){
 		ArrayList<Double> angles = new ArrayList<Double>();
+		//generate random angles
 		for(int i = 0; i<specs.getJointCount();i++){
 			angles.add(Math.random());
 		}
+		//create ArmConfig
 		ArmConfig c = new ArmConfig(new Point2D.Double(Math.random(),Math.random()),angles);
-		if(!tester.hasCollision(c, obstacles)&& tester.hasValidJointAngles(c)&& !tester.hasSelfCollision(c))
-			return new Vertex(c);
-		return null;
+		//if the config is not valid, create a new one
+		while(!configIsValid(c)){
+			angles.clear();
+			for(int i = 0; i<specs.getJointCount();i++){
+				angles.add(Math.random());
+			}
+			c = new ArmConfig(new Point2D.Double(Math.random(),Math.random()),angles);
+		}
+		// return the valid config
+		return new Vertex(c);
+	}
+	/**
+	 * Samples Uniformely at random a valid config within distance D of c 
+	 * @param c the config from which we are UAR sampling the next
+	 * @return UAR sampled valid config
+	 */
+	public Vertex randomSamplingFrom(ArmConfig c){
+		List<Double> angles = new ArrayList<Double>();
+		//generate angles (within step range)
+		for(double d:c.getJointAngles()){
+			angles.add(d+Math.random()*ANGLE_STEP);
+		}
+		ArmConfig c1 = new ArmConfig(new Point2D.Double(c.getBaseCenter().getX()+Math.random()*D,c.getBaseCenter().getY()+Math.random()*D),angles);
+		
+		while(!configIsValid(c1)){
+			angles.clear();
+			for(double d:c.getJointAngles()){
+				angles.add(d+Math.random()*ANGLE_STEP);
+			}
+			c1 = new ArmConfig(new Point2D.Double(c.getBaseCenter().getX()+Math.random()*D,c.getBaseCenter().getY()+Math.random()*D),angles);
+		}
+		return new Vertex(c1);
 	}
 	
 	/**
-	 * 
-	 * @return a config sampled near an obstacle
+	 * Tries to sample a config near an obstacle
+	 * returns null if none of the sampler configs are valid
+	 * @return  config sampled near an obstacle or null if none found.
 	 */
 	public Vertex nearObstacleSampling(){
-		 //loop until we find a config that works, might need to take this off to account for weighting.
+		boolean q1Valid= true,q2Valid=true;
 		//Choose a sampling q1 randomly from the config space
 		Vertex q1 = randomSampling();
 		//Sample q2 uniformely at random from the set of all configs withing Distance D and with joint angles within max step
-		Vertex q2 = new Vertex(new ArmConfig(new Point2D.Double(
-					(q1.getC().getBaseCenter().getX() +Math.random()*D),(q1.getC().getBaseCenter().getY()+Math.random()*D)),
-					makeRandomAngleStep(q1))); 
-		//Check that the configs are valid
-		/*for(Obstacle o : obstacles){
-			if (q1valid&& o.getRect().contains(q1.getC().getBaseCenter())){
-				q1valid = false;
+		Vertex q2 = randomSamplingFrom(q1.getC());
+		//Check wether the configs are collidng with obstacles.
+		for(Obstacle o : obstacles){
+			if (q1Valid&& o.getRect().intersects(q1.getC().getChairAsRect())){
+				q1Valid = false;
 			}
-			if(q2valid&&o.getRect().contains(q2.getC().getBaseCenter())){
-				q2valid = false;
+			if(q2Valid&&o.getRect().intersects(q2.getC().getChairAsRect())){
+				q2Valid = false;
 			}
-		}*/
-		//if one of the 2 is valid and the other isnt then we have a sampling near an obstacle
-		boolean q1valid = ! tester.hasCollision(q1.getC(), obstacles)&& tester.hasValidJointAngles(q1.getC())&& !tester.hasSelfCollision(q1.getC());
-		boolean q2valid = ! tester.hasCollision(q2.getC(), obstacles)&& tester.hasValidJointAngles(q2.getC())&& !tester.hasSelfCollision(q2.getC());
-		if(!q1valid&&q2valid){
+		}
+		//if one of the 2 is  and the other isn't then we have a sampling near an obstacle
+		
+		if(!q1Valid&&q2Valid){
 				return q2;
-		}else if(!q2valid&&q1valid){
+		}else if(!q2Valid&&q1Valid){
 				return q1;
 		}
-		//We didnt find a valid config
+		//We didnt find a configuration near an obstacle
 		return null;
 	}
 	
 	
 	/**
-	 * 
-	 * @return a config sampled between 2 obstacles
+	 * Tries to sample a config between 2 obstacles
+	 * @return a config sampled between 2 obstacles or null if notne found
 	 */
 	public Vertex sampleInsidePassage(){
-		boolean q1valid,q2valid;
+		boolean q1Valid=true,q2Valid=true;
 		Vertex q1 = randomSampling();
-		Vertex q2 = new Vertex(new ArmConfig(new Point2D.Double(
-				(q1.getC().getBaseCenter().getX() +Math.random()*D),(q1.getC().getBaseCenter().getY()+Math.random()*D)),
-				makeRandomAngleStep(q1)));
-		q1valid = ! tester.hasCollision(q1.getC(), obstacles)&& tester.hasValidJointAngles(q1.getC())&& !tester.hasSelfCollision(q1.getC());
-		q2valid = ! tester.hasCollision(q2.getC(), obstacles)&& tester.hasValidJointAngles(q2.getC())&& !tester.hasSelfCollision(q2.getC());
+		Vertex q2 = randomSamplingFrom(q1.getC());
 		
-		if(q1valid == false && q2valid == false){
+		for(Obstacle o : obstacles){
+			if (q1Valid&& o.getRect().intersects(q1.getC().getChairAsRect())){
+				q1Valid = false;
+			}
+			if(q2Valid&&o.getRect().intersects(q2.getC().getChairAsRect())){
+				q2Valid = false;
+			}
+		}
+		
+		if(q1Valid == false && q2valid == false){
 			double x = (q1.getC().getBaseCenter().getX()+q2.getC().getBaseCenter().getX())/2;
 			double y = (q1.getC().getBaseCenter().getY()+q2.getC().getBaseCenter().getY())/2;
 			ArmConfig cm = new ArmConfig(new Point2D.Double(x,y),randomSampling().getC().getJointAngles());
@@ -219,11 +258,7 @@ public class Sampler {
 	}
 	
 	private List<Double> makeRandomAngleStep(Vertex q1){
-		List<Double> result = new ArrayList<Double>();
-		for(double d:q1.getC().getJointAngles()){
-			result.add(d+Math.random()*ANGLE_STEP);
-		}
-		return result;
+		
 	}
 	
 	private enum SamplingStrat{
@@ -275,4 +310,57 @@ public class Sampler {
 			return retval;
 		}
 	}
+	
+	private boolean configIsValid(ArmConfig c){
+		List<Double> jointAngles = c.getJointAngles();
+		if(jointAngles.size()==0)
+			return false;
+		for (Double angle : jointAngles) {
+			if (angle <= MIN_JOINT_ANGLE ) {
+				return false;
+			} else if (angle >= MAX_JOINT_ANGLE ) {
+				return false;
+			}
+		}
+		List<Line2D> links = c.getLinks();
+		List<Line2D> chair = c.getChair();
+		for (int i = 0; i < links.size(); i++) {
+			// check for collision between links
+			if (c.hasGripper()) {
+				//gripper situations
+				if (links.size()-i <= 4) {
+					//check gripper collision with joint links
+					for (int j = 0; j < links.size()-5; j++) {
+						if (links.get(i).intersectsLine(links.get(j))) {
+							return false;
+						}
+					}
+				} else {
+					//check collision between joint links
+					for (int j = 0; j < i - 1; j++) {
+						if (links.get(i).intersectsLine(links.get(j))) {
+							return false;
+						}
+					}
+				}
+			} else {
+				//non-gripper situations
+				for (int j = 0; j < i - 1; j++) {
+					if (links.get(i).intersectsLine(links.get(j))) {
+						return false;
+					}
+				}
+			}
+			// if not first link, check for collision with chair
+			if(i > 0) {
+				for(int j = 0; j < 4; j++) {
+					if (links.get(i).intersectsLine(chair.get(j))) {
+						return false;
+					}
+				}
+			}
+		}
+	return true;
+	}
+	
 }

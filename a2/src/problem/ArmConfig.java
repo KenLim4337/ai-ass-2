@@ -2,6 +2,7 @@ package problem;
 
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
@@ -364,10 +365,17 @@ public class ArmConfig {
         chair.add(new Line2D.Double(x1 + halfWidth, y1 - halfWidth, x1 - halfWidth, y1 - halfWidth));
         chair.add(new Line2D.Double(x1 - halfWidth, y1 - halfWidth, x1 - halfWidth, y1 + halfWidth));
     }
-
-	public void setJointAngles(List<Double>angles) {
-		this.jointAngles=angles;
-		
+	
+	public Rectangle2D getChairAsRect(){
+		/*
+		 * the chair is generated as follow
+		 * 1	2
+		 * 4	3
+		 * So point 1 is the one we need for initialising the rectangle
+		 */
+		Point2D temp = getChair().get(0).getP1();
+		Rectangle2D chair = new Rectangle2D.Double(temp.getX(), temp.getY(), ArmConfig.CHAIR_WIDTH,  ArmConfig.CHAIR_WIDTH);
+		return chair;
 	}
 
 }

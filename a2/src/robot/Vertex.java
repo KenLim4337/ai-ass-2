@@ -7,7 +7,7 @@ import java.util.List;
 import problem.ArmConfig;
 
 public class Vertex {
-	int id; /* The course name */
+	int id;
 	List<Edge> edges;
 	double pathCost = Integer.MAX_VALUE;//Max value by default
 	double h = -1;
@@ -94,13 +94,13 @@ public class Vertex {
 
 	@Override
 	public boolean equals(Object obj) {
-		boolean result = true;
+		boolean result = false;
 		if (obj instanceof Vertex){
 			Vertex other = (Vertex) obj;
-			if (id != other.getId()) {
-				result = false;
-			} else{ if (!edges.equals(other.edges))
-				result = false;
+			if (id == other.getId()) {
+				result = true;
+			} else{ if (c.equals(other.c))
+				result = true;
 			}
 		}
 		return result;

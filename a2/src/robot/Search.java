@@ -37,7 +37,7 @@ public class Search {
 		List<Vertex> explored = new ArrayList<Vertex>();
 		
 		//Set starting point initial cost to 0
-		environment.getVertexById(0).setPathCost(0);
+		environment.getLocations().get(0).setPathCost(0);
 		
 		//Add root to PQ
 		queue.add(environment.getVertexById(0));

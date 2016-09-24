@@ -127,7 +127,7 @@ public class Sampler {
 	 * 
 	 *@returns the Graph graph with 10 more samples in it 
 	 */
-	public Graph sampleConfigSpace(){
+	public List<ArmConfig> sampleConfigSpace(){
 		//Initialise result
 		//Graph result = new Graph();
 		//Randomly generate n
@@ -150,7 +150,7 @@ public class Sampler {
 		while(true){
 			List<ArmConfig> path = searcher.searcher();
 			System.out.println("searcher found : "+path+" solution");
-			specs.setPath(path);
+			//specs.setPath(path);
 			isPathFound = !(path.isEmpty());
 			if(!isPathFound){
 				//Add 10 samples to the graph
@@ -180,7 +180,8 @@ public class Sampler {
 					
 				}
 			}else{
-				return configSpace;
+				specs.setPath(configSpace.splitValidPath(path));
+				return specs.getPath();
 			}
 		}
 	}

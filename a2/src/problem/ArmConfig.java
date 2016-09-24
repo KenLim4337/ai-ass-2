@@ -146,9 +146,18 @@ public class ArmConfig {
 	 */
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(base.getX());
+		if(String.valueOf(base.getX()).length()>5){
+			sb.append(String.valueOf(base.getX()).substring(0, 5));
+		}else{
+			sb.append(base.getX());
+		}
+		
         sb.append(" ");
-		sb.append(base.getY());
+        if(String.valueOf(base.getY()).length()>5){
+			sb.append(String.valueOf(base.getY()).substring(0, 5));
+		}else{
+			sb.append(base.getY());
+		}
 		for (Double angle : jointAngles) {
 			sb.append(" ");
 			sb.append(angle);

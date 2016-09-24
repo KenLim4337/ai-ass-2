@@ -198,6 +198,16 @@ public class Graph implements Cloneable {
 		}
 		return d;
 	}
+	
+	public List<ArmConfig> splitValidPath(List<ArmConfig> validPath){
+		ArrayList<ArmConfig>result = new ArrayList<ArmConfig>();
+		for(int i =0; i<validPath.size()-1;i++){
+			result.addAll(splitDirectPath(validPath.get(i),validPath.get(i+1)));
+			System.out.println("Done direct path");
+			System.out.println("Path is : "+result);
+		}
+		return result;
+	}
 	/**
 	 * Splits a directPath between 2 ArmConfig into the required steps
 	 * hen returns the appropriate steps as a list of ArmConfigs
@@ -207,7 +217,7 @@ public class Graph implements Cloneable {
 		ArrayList<ArmConfig>result = new ArrayList<ArmConfig>();
 		result.add(init);
 		ArmConfig step = init;
-		if(isValidStep(init, goal)){
+		if(!isValidStep(init, goal)){
 			AffineTransform af = new AffineTransform();
 			double distX = goal.getBaseCenter().getX()- init.getBaseCenter().getX();
 			double distY = goal.getBaseCenter().getY()- init.getBaseCenter().getY();
@@ -217,7 +227,9 @@ public class Graph implements Cloneable {
 			for(int i =0; i<goal.getJointCount();i++){
 				angleToCover.add(goal.getJointAngles().get(i)-init.getJointAngles().get(i));
 			}
-			while(isValidStep(step, goal)){
+			//need to change this so that only X or Y is changed
+			while(!isValidStep(step, goal)){
+				System.out.println(result);
 				if(distY>=Sampler.CHAIR_STEP&& distX>=Sampler.CHAIR_STEP){
 					af.setToTranslation(Sampler.CHAIR_STEP*signX, Sampler.CHAIR_STEP*signY);
 					distX=distX-Sampler.CHAIR_STEP;
@@ -242,6 +254,15 @@ public class Graph implements Cloneable {
 					}
 				}
 				 Point2D base = new Point2D.Double();
+				 if(af.getTranslateX()!=0 && af.getTranslateY()!=0){
+					 if(Math.random()>0.5){
+						 distY+=af.getTranslateY();
+						 af.setToTranslation(af.getTranslateX(), 0);
+					 }else{
+						 distX+= af.getTranslateX();
+						 af.setToTranslation(0, af.getTranslateY());
+					 }
+				 }
 				 af.transform(step.getBaseCenter(), base);
 				 List<Double>rotate = new ArrayList<Double>();
 				 for(int i =0;i<angleToCover.size();i++){
@@ -266,6 +287,7 @@ public class Graph implements Cloneable {
 		int index =Double.valueOf(Math.random()*this.getNumberOfLocation()).intValue(); // this will always round down
 		return locations.get(index);	
 	}
+	
 	
 	public boolean testConfigCollision(ArmConfig c, HBVNode obs){
 		boolean result = false;
@@ -310,10 +332,13 @@ public class Graph implements Cloneable {
 			return false;
 		} else if (cfg0.maxGripperDiff(cfg1) > Sampler.CHAIR_STEP ) {
 			return false;
-		} else if (cfg0.getBaseCenter().distance(cfg1.getBaseCenter()) > Sampler.CHAIR_STEP ) {
-			return false;
-		}
+		} else{
+			//distance-step and check if its greater then +- error
+			if (cfg0.getBaseCenter().distance(cfg1.getBaseCenter())-0.00000000000000001 > Sampler.CHAIR_STEP ) {
+				return false;
+			}
 		return true;
+		}
 	}
 	
 	private double SegSegDistance(Line2D l1, Line2D l2){

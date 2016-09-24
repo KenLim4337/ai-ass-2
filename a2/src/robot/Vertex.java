@@ -54,6 +54,13 @@ public class Vertex {
 	public List<Edge> getEdges(){
 		return this.edges;	
 	}
+	/**
+	 * @assumes the edge e is a valid edge for v
+	 * @param e
+	 */
+	public void addE(Edge e){
+		this.edges.add(e);
+	}
 	
 	public void setPathCost(double cost){
 		this.pathCost = cost;
@@ -99,10 +106,11 @@ public class Vertex {
 		boolean result = false;
 		if (obj instanceof Vertex){
 			Vertex other = (Vertex) obj;
-			if (c.equals(other)) {
+			System.out.println("Comparing :"+this+" and "+other);
+			if (c.equals(other.getC())) {
+				System.out.println("They are the same ! ");
 				result = true;
 			} 
-			
 		}
 		return result;
 	}

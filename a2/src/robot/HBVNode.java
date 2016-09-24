@@ -8,35 +8,39 @@ import java.util.ArrayList;
 import java.util.List;
 
  public class HBVNode {
-	    private List<HBVNode> children = new ArrayList<HBVNode>();
+	    private List<HBVNode> children = new ArrayList<HBVNode>(2);
 	    private HBVNode parent = null;
-	    private Ellipse2D volume = null;
-
+	    private Rectangle2D volume = null;
+	    private Object primitive= null;
+	    
+	    public HBVNode(){
+	    	//Empty tree in the case of no Obstacles
+	    }
+	    
 	    public HBVNode(Object primitive) {
 	        /*
 	         * Two Cases : either the primitive is a Line or it is another volume
 	         */
+	    	this.primitive = primitive;
 	    	if(primitive instanceof Line2D){
 	    		Line2D.Double l= (Line2D.Double)primitive;
-	    		Rectangle2D bounds = l.getBounds2D();
-	    		this.volume = new Ellipse2D.Double(bounds.getX(),bounds.getY(),bounds.getHeight(),bounds.getWidth());
+	    		this.volume = l.getBounds2D();
 	    	}else{
 	    		if(primitive instanceof Ellipse2D){
-	    			this.volume =(Ellipse2D.Double)primitive;
+	    			this.volume =(Rectangle2D.Double)primitive;
 	    		}
 	    	}
 	    	 
 	    }
 
 	    public HBVNode(Object primitive, HBVNode parent) {
-	    	
+	    	this.primitive = primitive;
 	    	if(primitive instanceof Line2D){
 	    		Line2D.Double l= (Line2D.Double)primitive;
-	    		Rectangle2D bounds = l.getBounds2D();
-	    		this.volume = new Ellipse2D.Double(bounds.getX(),bounds.getY(),bounds.getHeight(),bounds.getWidth());
+	    		this.volume = l.getBounds2D();
 	    	}else{
 	    		if(primitive instanceof Ellipse2D){
-	    			this.volume =(Ellipse2D.Double)primitive;
+	    			this.volume =(Rectangle2D.Double)primitive;
 	    		}
 	    	}
 	        this.parent = parent;
@@ -62,15 +66,24 @@ import java.util.List;
 	        this.children.add(child);
 	    }
 
-	    public Ellipse2D getVolume() {
+	    public Rectangle2D getVolume() {
 	        return this.volume;
 	    }
-
+	    
+	    
 	    /*public void setVolume(T data) {
 	        this.data = data;
 	    }*/
 
-	    public boolean isRoot() {
+	    public Object getPrimitive() {
+			return primitive;
+		}
+
+		public void setPrimitive(Object primitive) {
+			this.primitive = primitive;
+		}
+
+		public boolean isRoot() {
 	        return (this.parent == null);
 	    }
 
@@ -83,5 +96,11 @@ import java.util.List;
 
 	    public void removeParent() {
 	        this.parent = null;
+	    }
+	    
+	    public boolean isEmpty(){
+	    	if((children.size() ==0)&& parent == null && volume == null && primitive == null)
+	 	    	return true;
+ 	    	return false;
 	    }
 	}

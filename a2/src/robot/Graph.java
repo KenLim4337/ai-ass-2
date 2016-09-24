@@ -3,6 +3,7 @@ package robot;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Stack;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.PathIterator;
@@ -73,11 +74,11 @@ public class Graph implements Cloneable {
 	
 	@Override
 	public String toString() {
-		return "Graph [locations=" + locations + ", edges=" + edges
-				+ ", numberOfLocation=" + numberOfLocation + "]";
+		return "Graph [locations=" + locations + "\n edges=" + edges
+				+ "\n	 numberOfLocation=" + numberOfLocation + "]";
 	}
 
-	public List<Edge> generateEdge(Vertex v, List<Obstacle>obs){
+	public List<Edge> generateEdge(Vertex v, HBVNode obs){
 		//initialize result
 		ArrayList<Edge> result = new ArrayList<Edge>();
 		Vertex prev = v;
@@ -97,8 +98,10 @@ public class Graph implements Cloneable {
 					 }else{
 						 //Vertex vTmp =new Vertex(p.get(i+1));
 						 //this.addLoc(vTmp);
+						 System.out.println("Line from "+v+" to "+ v1+ " is Valid ! ");
 						 Edge e = new Edge(v, v1);
 						 this.addE(e);
+						 v.addE(e);
 						 //prev = vTmp;
 					 }
 				 //}
@@ -131,59 +134,70 @@ public class Graph implements Cloneable {
 	 * @param obs list of obstacles
 	 * @return Wether the Line between c1 and c2 is valid
 	 */
-	private boolean checkLineValid(ArmConfig c1, ArmConfig c2,List<Obstacle>obs) {
-		if(testCollision(c1, obs)||testCollision(c2, obs))
-			return false;
-		
-		//return true;
-		//Compute distance to closest obs for p1 && p2
-		double distClosestObsP1 = getDistanceToClosestObs(c1, obs);
-		double distClosestObsP2 = getDistanceToClosestObs(c2, obs);
-		/*
-		 * create circle C1(P1,distClosestObsP1) and cricle C2(P2,distclosestObstP2)
-		 * Same as the ellipse in the framing rectangle with top left corner = (X+dist,Y+dist)
-		 * and  with = heigh = dist
-		 */
-		Ellipse2D.Double circle1 = new Ellipse2D.Double(c1.getBaseCenter().getX()+distClosestObsP1,c1.getBaseCenter().getY()+distClosestObsP1,distClosestObsP1,distClosestObsP1);
-		Ellipse2D.Double circle2 = new Ellipse2D.Double(c2.getBaseCenter().getX()+distClosestObsP2,c2.getBaseCenter().getY()+distClosestObsP2,distClosestObsP2,distClosestObsP2);
-		//generate c3 = c1+c2/2
-		ArmConfig c3 = new ArmConfig(
-				new Point2D.Double(
-						(c1.getBaseCenter().getX()+c2.getBaseCenter().getX())/2,
-						(c1.getBaseCenter().getY()+c2.getBaseCenter().getY())/2),
-						c1.getJointAngles());
-
-		Rectangle2D chair =c3.getChairAsRect();
-		if(circle1.contains(chair)&&circle2.contains(chair)){
+	private boolean checkLineValid(ArmConfig c1, ArmConfig c2,HBVNode obs) {
+		if (obs.isEmpty()){
 			return true;
 		}else{
-			boolean a = checkLineValid(c1,c3,obs);
-			boolean b = checkLineValid(c3,c2,obs);
-			return a&&b;//STACKOVERFLOW 
+			if(testConfigCollision(c1, obs)||testConfigCollision(c2, obs))
+				return false;
+			
+			//return true;
+			//Compute distance to closest obs for p1 && p2
+			double distClosestObsP1 = getDistanceToClosestObs(c1, obs);
+			double distClosestObsP2 = getDistanceToClosestObs(c2, obs);
+			/*
+			 * create circle C1(P1,distClosestObsP1) and cricle C2(P2,distclosestObstP2)
+			 * Same as the ellipse in the framing rectangle with top left corner = (X+dist,Y+dist)
+			 * and  with = heigh = dist
+			 */
+			Ellipse2D.Double circle1 = new Ellipse2D.Double(c1.getBaseCenter().getX()+distClosestObsP1,c1.getBaseCenter().getY()+distClosestObsP1,distClosestObsP1,distClosestObsP1);
+			Ellipse2D.Double circle2 = new Ellipse2D.Double(c2.getBaseCenter().getX()+distClosestObsP2,c2.getBaseCenter().getY()+distClosestObsP2,distClosestObsP2,distClosestObsP2);
+			//generate c3 = c1+c2/2
+			ArmConfig c3 = new ArmConfig(
+					new Point2D.Double(
+							(c1.getBaseCenter().getX()+c2.getBaseCenter().getX())/2,
+							(c1.getBaseCenter().getY()+c2.getBaseCenter().getY())/2),
+							c1.getJointAngles());
+	
+			Rectangle2D chair =c3.getChairAsRect();
+			if(circle1.contains(chair)&&circle2.contains(chair)){
+				return true;
+			}else{
+				boolean a = checkLineValid(c1,c3,obs);
+				boolean b = checkLineValid(c3,c2,obs);
+				return a&&b;
+			}
 		}
 	}
 	
-	private double getDistanceToClosestObs(ArmConfig c, List<Obstacle>obs){
+	private double getDistanceToClosestObs(ArmConfig c, HBVNode obs){
 		double d = Double.MAX_VALUE;
-		double[] coords = new double[6];
-		//For each obstacle
-		for(Obstacle o : obs){
-			double x = o.getRect().getX();
-			double y = o.getRect().getY();
-			double width =  o.getRect().getWidth();
-			double height = o.getRect().getHeight();
-			Point2D p1 = new Point2D.Double(x,y);
-			Point2D p2 =new Point2D.Double(x+width,y);
-			Point2D p3 = new Point2D.Double(x+width,y-height);
-			Point2D p4 = new Point2D.Double(x,y-height);
-			for(Line2D l1: c.getLinks()){
-				double dist = Math.min(Math.min(l1.ptLineDist(p1), l1.ptLineDist(p2)), Math.min(l1.ptLineDist(p3), l1.ptLineDist(p4)));
-				d = (d< dist)? dist: d;
-			}
+		Stack<HBVNode> s = new Stack<HBVNode>();
+		s.push(obs);
+		
+		for( Line2D l: c.getLinks()){
+			d = Math.min(d, DFSDistance(obs,s,d,l));
 		}
 		return d;
 	}
 	
+	private double DFSDistance(HBVNode obs, Stack<HBVNode>s, double d, Line2D l){
+		if(!s.empty()){
+			HBVNode current = s.pop();
+			if(l.ptSegDist(new Point2D.Double(current.getVolume().getCenterX(),current.getVolume().getCenterY()))<d){
+				if(current.isLeaf()){
+					Line2D primitive = (Line2D)current.getPrimitive();
+					d = Math.min(d,SegSegDistance(l, primitive));
+				}else{
+					for(HBVNode n:current.getChildren()){
+						s.push(n);
+						return DFSDistance(obs,s,d,l);
+					}
+				}
+			}
+		}
+		return d;
+	}
 	/**
 	 * Splits a directPath between 2 ArmConfig into the required steps
 	 * hen returns the appropriate steps as a list of ArmConfigs
@@ -253,24 +267,39 @@ public class Graph implements Cloneable {
 		return locations.get(index);	
 	}
 	
-	/**
-	 * Test wether a config is in collision wiht any of the obstacles
-	 * @param c The config to test
-	 * @param obs the list of obstacles
-	 * @return True if colliding wiht obstacle false otherwise
-	 */
-	public boolean testCollision(ArmConfig c, List<Obstacle>obs){
-		List<Line2D>links = c.getLinks();
-		for(Obstacle o : obs){
-			for(Line2D l:links){
-				if(o.getRect().intersectsLine(l))
-					return true;
-			}
-			if(o.getRect().intersects(c.getChairAsRect())){
-				return true;
+	public boolean testConfigCollision(ArmConfig c, HBVNode obs){
+		boolean result = false;
+		if(!obs.isEmpty()){
+			for(Line2D link: c.getLinks()){
+				result &= testCollision(link,obs);
 			}
 		}
-		return false;
+		return result;
+	}
+	
+	
+	public boolean testCollision(Line2D link, HBVNode obs){
+		if(!obs.getVolume().intersectsLine(link)){
+			return false;
+		}else{
+			if(obs.isLeaf()){
+				Line2D p = (Line2D)obs.getPrimitive();
+				return simpleCollisionCheck(link,p);
+			}else{
+				return testCollision(link,obs.getChildren().get(0))||testCollision(link,obs.getChildren().get(0));
+			}
+		}
+	}
+	
+	
+	/**
+	 * Test wether a config is in collision a primitive from an obstacle
+	 * @param c The config to test
+	 * @param primitive the primitive
+	 * @return True if colliding with obstacle false otherwise
+	 */
+	public boolean simpleCollisionCheck(Line2D link, Line2D primitive){
+		return primitive.intersectsLine(link);
 	}
 	
 	
@@ -285,5 +314,9 @@ public class Graph implements Cloneable {
 			return false;
 		}
 		return true;
+	}
+	
+	private double SegSegDistance(Line2D l1, Line2D l2){
+		return Math.min(Math.min(l1.ptSegDist(l2.getP1()), l1.ptSegDist(l2.getP2())), Math.min(l2.ptSegDist(l1.getP1()), l2.ptSegDist(l1.getP2())));
 	}
 }

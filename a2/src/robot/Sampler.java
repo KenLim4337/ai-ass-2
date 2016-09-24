@@ -6,8 +6,14 @@ import tester.Tester;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.FlatteningPathIterator;
 import java.awt.geom.Line2D;
+import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 
 
@@ -35,6 +41,8 @@ public class Sampler {
 	//List of obstacle defining the workspace
 	List<Obstacle>obstacles;
 	
+	HBVNode hbvTree;
+	
 	ProblemSpec specs;
 	
 	Search searcher;
@@ -48,8 +56,62 @@ public class Sampler {
 		configSpace.addLoc(start);
 		configSpace.addLoc(end);
 		//see if an edge can be generated directly from start to end;
-		configSpace.generateEdge(start, obstacles);
+		this.hbvTree = generateHBVTree();
+		configSpace.generateEdge(start, hbvTree);
 		this.searcher = new Search(configSpace);
+		
+	}
+	private HBVNode generateHBVTree() {
+		Stack<HBVNode>nodes = new Stack<HBVNode>();
+		if(obstacles.size()>0){
+			//Iterate over the obstacles
+			for(Obstacle obs : obstacles){
+				//retrieve obstacle bounds
+				Rectangle2D temp = obs.getRect();
+				//retrieve the PathIterator over the bounds
+				PathIterator tempIt =temp.getPathIterator(new AffineTransform());
+				//create the array to store the coordinates
+				double[] coords = new double[6];
+				//Variable storing the previous coordinates
+				Point2D prev = new Point2D.Double();
+				while(!tempIt.isDone()){
+					//retrive current segment coordinates
+					tempIt.currentSegment(coords);
+					//create point from the coordinates
+					Point2D p = new Point2D.Double(coords[0],coords[1]);
+					//create the line between the new point and the previous one
+					Line2D l = new Line2D.Double(prev,p);
+					//add the HBV to the list of leaf nodes
+					nodes.push(new HBVNode(l));
+					//set previous to be
+					prev = p;
+					//retrieve the next coordinates
+					tempIt.next();
+				}
+			}
+			System.out.println(nodes);
+			/*
+			 * we now have full list of leaf nodes generate the tree from these
+			 * Iterate over the list and create a node for every 2 nodes in the list 
+			 */
+			while(nodes.size()>1){
+				//retrieve the 2 first nodes
+				
+				HBVNode n1 = nodes.pop();
+				HBVNode n2 = nodes.pop();
+				Rectangle2D bounds = new Rectangle2D.Double();
+				Rectangle2D.union(n1.getVolume().getBounds2D(), n2.getVolume().getBounds2D(), bounds);
+				Ellipse2D volume = new Ellipse2D.Double();
+				volume.setFrame(bounds);
+				HBVNode parent = new HBVNode(volume);
+				parent.addChild(n1);
+				parent.addChild(n2);
+				nodes.add(nodes.size()-1, parent);
+			}
+			return nodes.get(0);
+		}
+		return new HBVNode();
+		
 	}
 	/**
 	 * Exp3 Sampling stategy implementation
@@ -86,6 +148,10 @@ public class Sampler {
 		}
 		int started = counter;
 		while(true){
+			List<ArmConfig> path = searcher.searcher();
+			System.out.println("searcher found : "+path+" solution");
+			specs.setPath(path);
+			isPathFound = !(path.isEmpty());
 			if(!isPathFound){
 				//Add 10 samples to the graph
 				while(started> counter-10){
@@ -100,9 +166,9 @@ public class Sampler {
 						break;
 					}
 					r = 0;
-					if(!v.equals(null)){
+					if(v != null){
 						configSpace.addLoc(v); 
-						int i = configSpace.generateEdge(v,obstacles).size();
+						int i = configSpace.generateEdge(v,hbvTree).size();
 						if(i>0)
 							r =1;
 					}
@@ -113,9 +179,6 @@ public class Sampler {
 					strats.get(strats.indexOf(s)).setWeight( s.getWeight()*Math.exp(((n*r)/s.getProb())/k ));
 					
 				}
-				List<ArmConfig> path = searcher.searcher();
-				specs.setPath(path);
-				isPathFound = !(path.isEmpty());
 			}else{
 				return configSpace;
 			}
@@ -203,8 +266,8 @@ public class Sampler {
 		//Sample q2 uniformely at random from the set of all configs withing Distance D and with joint angles within max step
 		Vertex q2 = randomSamplingFrom(q1.getC());
 		//Check wether the configs are collidng with obstacles.
-		boolean q1Valid=configSpace.testCollision(q1.getC(), obstacles),
-				q2Valid=configSpace.testCollision(q2.getC(), obstacles);
+		boolean q1Valid=configSpace.testConfigCollision(q1.getC(), hbvTree),
+				q2Valid=configSpace.testConfigCollision(q2.getC(), hbvTree);
 		//if one of the 2 is  and the other isn't then we have a sampling near an obstacle
 		
 		if(!q1Valid&&q2Valid){
@@ -226,18 +289,13 @@ public class Sampler {
 		Vertex q1 = randomSampling();
 		Vertex q2 = randomSamplingFrom(q1.getC());
 		
-		boolean q1Valid=configSpace.testCollision(q1.getC(), obstacles),
-				q2Valid=configSpace.testCollision(q2.getC(), obstacles);
+		boolean q1Valid=configSpace.testConfigCollision(q1.getC(), hbvTree),
+				q2Valid=configSpace.testConfigCollision(q2.getC(), hbvTree);
 		if(q1Valid == false && q2Valid == false){
 			double x = (q1.getC().getBaseCenter().getX()+q2.getC().getBaseCenter().getX())/2;
 			double y = (q1.getC().getBaseCenter().getY()+q2.getC().getBaseCenter().getY())/2;
 			ArmConfig cm = new ArmConfig(new Point2D.Double(x,y),randomSamplingFrom(q1.getC()).getC().getJointAngles());
-			boolean cmValid = true;
-			for(Obstacle o : obstacles){
-				if (cmValid&& o.getRect().intersects(cm.getChairAsRect())){
-					cmValid = false;
-				}
-			}
+			boolean cmValid = configSpace.testConfigCollision(cm, hbvTree);
 			if(cmValid){
 				return new Vertex(cm);
 			}

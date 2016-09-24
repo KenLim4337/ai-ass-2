@@ -382,20 +382,25 @@ public class ArmConfig {
 	
 	@Override
 	public boolean equals(Object other){
-		if (!(other instanceof ArmConfig))
+		if (!(other instanceof ArmConfig)){
 			return false;
+		}
 		ArmConfig o = (ArmConfig)other;
-		if(!this.base.equals(o.getBaseCenter()))
+		if(!this.base.equals(o.getBaseCenter())){
 			return false;
+		}
 		
-		if(!this.jointAngles.equals(o.getJointAngles()))
+		if(!this.jointAngles.equals(o.getJointAngles())){
 			return false;
+		}
 		
-		if(this.hasGripper()!=o.hasGripper())
+		if(this.hasGripper()!= o.hasGripper()){
 			return false;
+		}
 		
-		if(!this.getGripperLengths().equals(o.getGripperLengths()))
+		if(!this.getGripperLengths().equals(o.getGripperLengths())){
 			return false;
+		}
 		
 		return true;
 		

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
  public class HBVNode {
-	    private List<HBVNode> children = new ArrayList<HBVNode>(2);
+	    private List<HBVNode> children = new ArrayList<HBVNode>();
 	    private HBVNode parent = null;
 	    private Rectangle2D volume = null;
 	    private Object primitive= null;
@@ -26,7 +26,7 @@ import java.util.List;
 	    		Line2D.Double l= (Line2D.Double)primitive;
 	    		this.volume = l.getBounds2D();
 	    	}else{
-	    		if(primitive instanceof Ellipse2D){
+	    		if(primitive instanceof Rectangle2D){
 	    			this.volume =(Rectangle2D.Double)primitive;
 	    		}
 	    	}
@@ -51,7 +51,7 @@ import java.util.List;
 	    }
 
 	    public void setParent(HBVNode parent) {
-	        parent.addChild(this);
+	       // parent.addChild(this);
 	        this.parent = parent;
 	    }
 
@@ -102,5 +102,10 @@ import java.util.List;
 	    	if((children.size() ==0)&& parent == null && volume == null && primitive == null)
 	 	    	return true;
  	    	return false;
+	    }
+	    
+	    @Override
+		public String toString(){
+	    	return volume+" primitives: "+children;
 	    }
 	}

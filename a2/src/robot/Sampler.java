@@ -26,7 +26,7 @@ public class Sampler {
 	//Bool defining if we have found a solution
 	boolean isPathFound;
 	//keep track of amount of vertices sampled
-    int counter = 2; //id 0,1 are reserved for init and goal vertices
+    //int counter = 2; //id 0,1 are reserved for init and goal vertices
 	//Distance D we are working with ( = max step)
 	public static final double D = 0.1;
 	public static final double CHAIR_STEP = 0.001;
@@ -99,14 +99,11 @@ public class Sampler {
 				
 				HBVNode n1 = nodes.pop();
 				HBVNode n2 = nodes.pop();
-				Rectangle2D bounds = new Rectangle2D.Double();
-				Rectangle2D.union(n1.getVolume().getBounds2D(), n2.getVolume().getBounds2D(), bounds);
-				Ellipse2D volume = new Ellipse2D.Double();
-				volume.setFrame(bounds);
+				Rectangle2D volume = n1.getVolume().createUnion(n2.getVolume());
 				HBVNode parent = new HBVNode(volume);
 				parent.addChild(n1);
 				parent.addChild(n2);
-				nodes.add(nodes.size()-1, parent);
+				nodes.add(0, parent);
 			}
 			return nodes.get(0);
 		}
@@ -146,15 +143,17 @@ public class Sampler {
 			//P(strat) = (1-n)*(W_strat(t)/SUM(W_strat(t)))+n/k
 			s.setP(((1-n)*(s.getWeight()/strats.getSumOfWeight()))+n/k);
 		}
-		int started = counter;
+		
 		while(true){
+			//int started = counter;
+			System.out.println(configSpace);
 			List<ArmConfig> path = searcher.searcher();
-			System.out.println("searcher found : "+path+" solution");
+			//System.out.println("searcher found : "+path+" solution");
 			//specs.setPath(path);
 			isPathFound = !(path.isEmpty());
 			if(!isPathFound){
 				//Add 10 samples to the graph
-				while(started> counter-10){
+				for(int i = 0; i<10;i+=0){
 					weightedStrat s = chooseStrat(strats);// set something different here to be defined when we know what we will do for search
 					Vertex v=null;
 					switch(s.getStrat()){
@@ -166,10 +165,11 @@ public class Sampler {
 						break;
 					}
 					r = 0;
-					if(v != null){
+					if(v != null && !configSpace.getLocations().contains(v)){
+						i++;
 						configSpace.addLoc(v); 
-						int i = configSpace.generateEdge(v,hbvTree).size();
-						if(i>0)
+						int j = configSpace.generateEdge(v,hbvTree).size();			
+						if(j>0)
 							r =1;
 					}
 					/*Update the weight of strat with the formula 
@@ -177,7 +177,6 @@ public class Sampler {
 					 */
 					//look for new edges if num of connected components increases/decreases update the weight of strat
 					strats.get(strats.indexOf(s)).setWeight( s.getWeight()*Math.exp(((n*r)/s.getProb())/k ));
-					
 				}
 			}else{
 				specs.setPath(configSpace.splitValidPath(path));

@@ -74,8 +74,7 @@ public class Graph implements Cloneable {
 	
 	@Override
 	public String toString() {
-		return "Graph [locations=" + locations + "\n edges=" + edges
-				+ "\n	 numberOfLocation=" + numberOfLocation + "]";
+		return "Graph: \n Locations: \n"+locations+"\n number of location/Edges : "+numberOfLocation+" / "+edges.size();
 	}
 
 	public List<Edge> generateEdge(Vertex v, HBVNode obs){
@@ -87,18 +86,18 @@ public class Graph implements Cloneable {
 		//For each Vertex in the graph
 		vertexLoop: for(Vertex v1: this.getLocations()){
 			//Create the appropriate Armconfigs to get from v to v1)
-			if(!v.equals(v1)){
+			if(!v.equals(v1)&& !this.edges.contains(new Edge(v,v1))){
 				//List<ArmConfig> p = splitDirectPath(v.getC(),v1.getC());
 				//System.out.println("Printing P: "+p);
 				//for(int i=0;i< p.size()-1;i++ ){
 		
-					 isValid = isValid&&checkLineValid(v.getC(),v1.getC(),obs);
+					 isValid = checkLineValid(v.getC(),v1.getC(),obs,-1,-1);
 					 if(!isValid){
 						 continue vertexLoop;
 					 }else{
 						 //Vertex vTmp =new Vertex(p.get(i+1));
 						 //this.addLoc(vTmp);
-						 System.out.println("Line from "+v+" to "+ v1+ " is Valid ! ");
+						 //System.out.println("Line from "+v+" to "+ v1+ " is Valid ! ");
 						 Edge e = new Edge(v, v1);
 						 this.addE(e);
 						 v.addE(e);
@@ -110,7 +109,7 @@ public class Graph implements Cloneable {
 			}
 			 
 		}
-		System.out.println("graph: "+this);
+		//System.out.println("graph: "+this);
 			//For each link in the chair check that the config is valid
 			//this needs to be moved into the sampler
 			/*for(Line2D l: v.getC().getLinks()){
@@ -128,29 +127,79 @@ public class Graph implements Cloneable {
 	}
 	
 	/**
-	 * @requires c1 & c2 two vertex with max distance = CHAIR_STEP and max angledifferent = ANGLE_STEP
-	 * @param c1 First configuration
-	 * @param c2 Second configuration
+	 * @assumes that -1 ill be entered if the distance to closest obst is not know
+	 * @paran c1 Start configuration
+	 * @param c2 End configuration
 	 * @param obs list of obstacles
+	 * @param d1 distance from c1 to closest obstacle, -1 if not  known
+	 * @param d2 distance from c2 to closest obstacle, -1 if not known
 	 * @return Wether the Line between c1 and c2 is valid
 	 */
-	private boolean checkLineValid(ArmConfig c1, ArmConfig c2,HBVNode obs) {
+	private boolean checkLineValid(ArmConfig c1, ArmConfig c2,HBVNode obs,double d1,double d2) {
+		double distance = c1.getBaseCenter().distance(c2.getBaseCenter());
 		if (obs.isEmpty()){
 			return true;
-		}else{
+		
+		
+		}
+		//System.out.println(c1.getBaseCenter().distance(c2.getBaseCenter()));
+		if(testConfigCollision(c1, obs)||testConfigCollision(c2, obs)||distance>0.6){
+			return false;
+		}
+		//Get start point
+		Point2D start = c1.getBaseCenter();
+		//Get primitive step from start point
+		Point2D step = c2.getBaseCenter();
+		if(distance>Sampler.CHAIR_STEP)
+			step = new Point2D.Double(start.getX()+Sampler.CHAIR_STEP,start.getY()+Sampler.CHAIR_STEP);
+		//do obstacle check between start and step check
+		//calculate distClosestObs
+		double distClosestObsP1,distClosestObsP2;
+		distClosestObsP1 = getDistanceToClosestObs(c1, obs);
+		distClosestObsP2 = getDistanceToClosestObs(c2, obs);
+		//generate rectangles 
+		Rectangle2D.Double r1 = new Rectangle2D.Double(start.getX()+distClosestObsP1/2, start.getY()+distClosestObsP2/2, distClosestObsP1, distClosestObsP1);
+		Rectangle2D.Double r2 = new Rectangle2D.Double(step.getX()+distClosestObsP1/2, step.getY()+distClosestObsP2/2, distClosestObsP1, distClosestObsP1);
+			
+		//if the circles intersect
+		if(r1.intersects(r2)){
+			if(distance>Sampler.CHAIR_STEP)
+				return checkLineValid(new ArmConfig(step, c1.getJointAngles()),c2,obs,distClosestObsP2,-1);
+			return true;
+		}
+		else{
+			return false;
+		}
+					
+		// return step to goal
+		//else
+		// return false
+		//
+		
+		/*}else{
 			if(testConfigCollision(c1, obs)||testConfigCollision(c2, obs))
 				return false;
 			
 			//return true;
 			//Compute distance to closest obs for p1 && p2
-			double distClosestObsP1 = getDistanceToClosestObs(c1, obs);
-			double distClosestObsP2 = getDistanceToClosestObs(c2, obs);
+			double distClosestObsP1,distClosestObsP2;
+			if(Double.compare(d1, -1)== 0){
+				 distClosestObsP1 = getDistanceToClosestObs(c1, 
+				 obs);
+			}else{
+				distClosestObsP1 = d1;
+			}
+			if(Double.compare(d2, -1)== 0){
+				 distClosestObsP2 = getDistanceToClosestObs(c2, obs);
+			}else{
+				distClosestObsP2 =d2;
+			}
 			/*
 			 * create circle C1(P1,distClosestObsP1) and cricle C2(P2,distclosestObstP2)
 			 * Same as the ellipse in the framing rectangle with top left corner = (X+dist,Y+dist)
 			 * and  with = heigh = dist
 			 */
-			Ellipse2D.Double circle1 = new Ellipse2D.Double(c1.getBaseCenter().getX()+distClosestObsP1,c1.getBaseCenter().getY()+distClosestObsP1,distClosestObsP1,distClosestObsP1);
+			/*Ellipse2D.Double circle1 = new Ellipse2D.Double(c1.getBaseCenter().getX()+distClosestObsP1,c1.getBaseCenter().getY()+distClosestObsP1,distClosestObsP1,distClosestObsP1);
 			Ellipse2D.Double circle2 = new Ellipse2D.Double(c2.getBaseCenter().getX()+distClosestObsP2,c2.getBaseCenter().getY()+distClosestObsP2,distClosestObsP2,distClosestObsP2);
 			//generate c3 = c1+c2/2
 			ArmConfig c3 = new ArmConfig(
@@ -163,11 +212,11 @@ public class Graph implements Cloneable {
 			if(circle1.contains(chair)&&circle2.contains(chair)){
 				return true;
 			}else{
-				boolean a = checkLineValid(c1,c3,obs);
-				boolean b = checkLineValid(c3,c2,obs);
+				boolean a = checkLineValid(c1,c3,obs,distClosestObsP1,-1);
+				boolean b = checkLineValid(c3,c2,obs,-1,distClosestObsP2);
 				return a&&b;
 			}
-		}
+		}*/
 	}
 	
 	private double getDistanceToClosestObs(ArmConfig c, HBVNode obs){
@@ -176,7 +225,7 @@ public class Graph implements Cloneable {
 		s.push(obs);
 		
 		for( Line2D l: c.getLinks()){
-			d = Math.min(d, DFSDistance(obs,s,d,l));
+			d = DFSDistance(obs,s,d,l);
 		}
 		return d;
 	}
@@ -191,8 +240,8 @@ public class Graph implements Cloneable {
 				}else{
 					for(HBVNode n:current.getChildren()){
 						s.push(n);
-						return DFSDistance(obs,s,d,l);
 					}
+					return DFSDistance(obs,s,d,l);
 				}
 			}
 		}
@@ -229,7 +278,7 @@ public class Graph implements Cloneable {
 			}
 			//need to change this so that only X or Y is changed
 			while(!isValidStep(step, goal)){
-				System.out.println(result);
+				//System.out.println(result);
 				if(distY>=Sampler.CHAIR_STEP&& distX>=Sampler.CHAIR_STEP){
 					af.setToTranslation(Sampler.CHAIR_STEP*signX, Sampler.CHAIR_STEP*signY);
 					distX=distX-Sampler.CHAIR_STEP;

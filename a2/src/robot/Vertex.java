@@ -106,9 +106,9 @@ public class Vertex {
 		boolean result = false;
 		if (obj instanceof Vertex){
 			Vertex other = (Vertex) obj;
-			System.out.println("Comparing :"+this+" and "+other);
+			//System.out.println("Comparing :"+this+" and "+other);
 			if (c.equals(other.getC())) {
-				System.out.println("They are the same ! ");
+				//System.out.println("They are the same ! ");
 				result = true;
 			} 
 		}

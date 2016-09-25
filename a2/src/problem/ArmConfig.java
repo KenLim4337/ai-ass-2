@@ -87,7 +87,7 @@ public class ArmConfig {
 		s.close();
 		this.gripper = false;
 		generateLinks();
-        	generateChair();
+        generateChair();
 	}
 
 	/**
@@ -210,7 +210,9 @@ public class ArmConfig {
 	 *
 	 * @return the list of gripper lengths.
 	 */
-	public List<Double> getGripperLengths() { return new ArrayList<Double>(gripperLengths); }
+	public List<Double> getGripperLengths() {
+		return new ArrayList<Double>(gripperLengths);
+		}
 	
 	/**
 	 * Returns the list of links as Line2D.
@@ -407,7 +409,7 @@ public class ArmConfig {
 			return false;
 		}
 		
-		if(!this.getGripperLengths().equals(o.getGripperLengths())){
+		if(this.hasGripper()&&!this.getGripperLengths().equals(o.getGripperLengths())){
 			return false;
 		}
 		

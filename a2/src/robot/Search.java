@@ -50,7 +50,7 @@ public class Search {
 	    
 	    //Runs if solution found
 	    if(current.equals(x.getLocations().get(1))){
-	    	System.out.println("Solution FOund!");
+	    	//System.out.println("Solution FOund!");
 	    	solution = resultBuilder(current);
 	    	return solution;
 	    }
@@ -63,11 +63,11 @@ public class Search {
 	    	
 	    	double cost = e.getWeight() + current.getPathCost();
 	    	
-
+	    	/*
 	    	if (e.getV2().equals(x.getLocations().get(1)) || e.getV2().equals(x.getLocations().get(1))) {
 	    		System.out.println(e.getV1().getC().getBaseCenter()+ " to " + e.getV2().getC().getBaseCenter() + " Cost: " + e.getWeight());
 	    	}
-	    	
+			*/    	
 	    	
 	    	//Checks if destination already explored or if there is a shorter path to destination
 	    	if (explored.contains(e.getV2()) || e.getV2().getPathCost() < cost) {   

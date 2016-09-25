@@ -1,12 +1,9 @@
 package robot;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import problem.ProblemSpec;
-import tester.Tester;
+//import tester.Tester;
 
 public class Launch {
 
@@ -15,7 +12,14 @@ public class Launch {
 		specs.loadProblem(args[0]);
 		Sampler sampler = new Sampler(specs);
 		sampler.sampleConfigSpace();
-		specs.saveSolution("solution");
+		
+		if (args.length > 1) {
+			specs.saveSolution(args[1]);
+		} else {
+			specs.saveSolution("solution");
+		}
+		
+		/*
 		Tester tester = new Tester();
 		tester.setPs(specs);
 		int i =1;
@@ -29,6 +33,7 @@ public class Launch {
 		tester.testBounds(i++, verbose);
 		tester.testGripperLengths(i++, verbose);
 		System.out.println("DONE !");
+		*/
 	}
 
 }

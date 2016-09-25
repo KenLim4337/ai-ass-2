@@ -2,14 +2,11 @@ package robot;
 import problem.ArmConfig;
 import problem.Obstacle;
 import problem.ProblemSpec;
-import tester.Tester;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.FlatteningPathIterator;
 import java.awt.geom.Line2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
@@ -52,7 +49,7 @@ public class Sampler {
 		this.obstacles = specs.getObstacles();
 		Vertex start = new Vertex(specs.getInitialState());
 		Vertex end = new Vertex(specs.getGoalState());
-		System.out.println("strat : "+start+" end: "+end+" ");
+		//System.out.println("strat : "+start+" end: "+end+" ");
 		configSpace.addLoc(start);
 		configSpace.addLoc(end);
 		//see if an edge can be generated directly from start to end;
@@ -89,7 +86,7 @@ public class Sampler {
 					tempIt.next();
 				}
 			}
-			System.out.println(nodes);
+			//System.out.println(nodes);
 			/*
 			 * we now have full list of leaf nodes generate the tree from these
 			 * Iterate over the list and create a node for every 2 nodes in the list 
@@ -146,7 +143,7 @@ public class Sampler {
 		
 		while(true){
 			//int started = counter;
-			System.out.println(configSpace);
+			//System.out.println(configSpace);
 			List<ArmConfig> path = searcher.searcher();
 			//System.out.println("searcher found : "+path+" solution");
 			//specs.setPath(path);

@@ -1,0 +1,8 @@
+Real build.xml is in:
+ai-ass-2\a2\src\robot
+
+Run ant in: 
+ai-ass-2\a2\src\robot
+
+Otherwise, precompiled .jar is in:
+ai-ass-2\a2\src\robot

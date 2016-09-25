@@ -5,16 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Stack;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 
 import problem.ArmConfig;
-import problem.Obstacle;
-import problem.ProblemSpec;
-import tester.Tester;
 
 public class Graph implements Cloneable {
 	ArrayList<Vertex>locations;
@@ -252,8 +247,8 @@ public class Graph implements Cloneable {
 		ArrayList<ArmConfig>result = new ArrayList<ArmConfig>();
 		for(int i =0; i<validPath.size()-1;i++){
 			result.addAll(splitDirectPath(validPath.get(i),validPath.get(i+1)));
-			System.out.println("Done direct path");
-			System.out.println("Path is : "+result);
+			//System.out.println("Done direct path");
+			//System.out.println("Path is : "+result);
 		}
 		return result;
 	}

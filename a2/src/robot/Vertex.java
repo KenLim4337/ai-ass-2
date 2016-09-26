@@ -13,6 +13,7 @@ public class Vertex {
 	double h = -1;
 	ArmConfig c;
 	Vertex parent;
+	Boolean isValid = null;
 
 	/**
 	 * Creates a new vertex
@@ -51,6 +52,19 @@ public class Vertex {
 		this.edges = edges;
 	}
 	
+	public boolean isValid() {
+		return isValid.booleanValue();
+	}
+	
+	public boolean validIsSet(){
+		return isValid!=null;
+	}
+
+	public void setValid(boolean isValid) {
+		this.isValid = Boolean.valueOf(isValid);
+	}
+
+
 	public List<Edge> getEdges(){
 		return this.edges;	
 	}

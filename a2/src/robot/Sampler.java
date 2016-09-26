@@ -148,6 +148,7 @@ public class Sampler {
 			//int started = counter;
 			System.out.println(configSpace);
 			List<ArmConfig> path = searcher.searcher();
+			purify();
 			//System.out.println("searcher found : "+path+" solution");
 			//specs.setPath(path);
 			isPathFound = !(path.isEmpty());
@@ -178,9 +179,19 @@ public class Sampler {
 					//look for new edges if num of connected components increases/decreases update the weight of strat
 					strats.get(strats.indexOf(s)).setWeight( s.getWeight()*Math.exp(((n*r)/s.getProb())/k ));
 				}
+				
 			}else{
 				specs.setPath(configSpace.splitValidPath(path));
 				return specs.getPath();
+			}
+		}
+	}
+	
+	public void purify(){
+		List<Vertex>toCheck = new ArrayList<Vertex>(configSpace.getLocations());
+		for(Vertex v: toCheck){
+			if(v.validIsSet()&& !v.isValid()){
+				configSpace.remLoc(v);
 			}
 		}
 	}
@@ -266,8 +277,8 @@ public class Sampler {
 		//Sample q2 uniformely at random from the set of all configs withing Distance D and with joint angles within max step
 		Vertex q2 = randomSamplingFrom(q1.getC());
 		//Check wether the configs are collidng with obstacles.
-		boolean q1Valid=configSpace.testConfigCollision(q1.getC(), hbvTree),
-				q2Valid=configSpace.testConfigCollision(q2.getC(), hbvTree);
+		boolean q1Valid=configSpace.testConfigCollision(q1, hbvTree),
+				q2Valid=configSpace.testConfigCollision(q2, hbvTree);
 		//if one of the 2 is  and the other isn't then we have a sampling near an obstacle
 		
 		if(!q1Valid&&q2Valid){
@@ -289,13 +300,13 @@ public class Sampler {
 		Vertex q1 = randomSampling();
 		Vertex q2 = randomSamplingFrom(q1.getC());
 		
-		boolean q1Valid=configSpace.testConfigCollision(q1.getC(), hbvTree),
-				q2Valid=configSpace.testConfigCollision(q2.getC(), hbvTree);
+		boolean q1Valid=configSpace.testConfigCollision(q1, hbvTree),
+				q2Valid=configSpace.testConfigCollision(q2, hbvTree);
 		if(q1Valid == false && q2Valid == false){
 			double x = (q1.getC().getBaseCenter().getX()+q2.getC().getBaseCenter().getX())/2;
 			double y = (q1.getC().getBaseCenter().getY()+q2.getC().getBaseCenter().getY())/2;
 			ArmConfig cm = new ArmConfig(new Point2D.Double(x,y),randomSamplingFrom(q1.getC()).getC().getJointAngles());
-			boolean cmValid = configSpace.testConfigCollision(cm, hbvTree);
+			boolean cmValid = configSpace.testConfigCollision(new Vertex(cm), hbvTree);
 			if(cmValid){
 				return new Vertex(cm);
 			}

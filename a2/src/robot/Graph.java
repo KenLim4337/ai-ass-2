@@ -41,6 +41,11 @@ public class Graph implements Cloneable {
 		}
 	}
 	
+	public void remLoc( Vertex loc){
+		locations.remove(loc);
+		numberOfLocation--;
+	}
+	
 	public void addE(Edge e){
 		if(!edges.contains(e)){
 			this.edges.add(e);
@@ -91,7 +96,7 @@ public class Graph implements Cloneable {
 				//System.out.println("Printing P: "+p);
 				//for(int i=0;i< p.size()-1;i++ ){
 		
-					 isValid = checkLineValid(v.getC(),v1.getC(),obs,-1,-1);
+					 isValid = checkLineValid(v,v1,obs,-1,-1);
 					 if(!isValid){
 						 continue vertexLoop;
 					 }else{
@@ -135,7 +140,8 @@ public class Graph implements Cloneable {
 	 * @param d2 distance from c2 to closest obstacle, -1 if not known
 	 * @return Wether the Line between c1 and c2 is valid
 	 */
-	private boolean checkLineValid(ArmConfig c1, ArmConfig c2,HBVNode obs,double d1,double d2) {
+	private boolean checkLineValid(Vertex v1, Vertex v2,HBVNode obs,double d1,double d2) {
+		ArmConfig c1 = v1.getC(),c2 = v2.getC();
 		double distance = c1.getBaseCenter().distance(c2.getBaseCenter());
 		if (obs.isEmpty()){
 			return true;
@@ -143,7 +149,7 @@ public class Graph implements Cloneable {
 		
 		}
 		//System.out.println(c1.getBaseCenter().distance(c2.getBaseCenter()));
-		if(testConfigCollision(c1, obs)||testConfigCollision(c2, obs)||distance>0.6){
+		if(testConfigCollision(v1, obs)||testConfigCollision(v2, obs)||distance>0.6){
 			return false;
 		}
 		//Get start point
@@ -164,7 +170,7 @@ public class Graph implements Cloneable {
 		//if the circles intersect
 		if(r1.intersects(r2)){
 			if(distance>Sampler.CHAIR_STEP)
-				return checkLineValid(new ArmConfig(step, c1.getJointAngles()),c2,obs,distClosestObsP2,-1);
+				return checkLineValid(new Vertex(new ArmConfig(step, c1.getJointAngles())),v2,obs,distClosestObsP2,-1);
 			return true;
 		}
 		else{
@@ -338,14 +344,19 @@ public class Graph implements Cloneable {
 	}
 	
 	
-	public boolean testConfigCollision(ArmConfig c, HBVNode obs){
-		boolean result = false;
-		if(!obs.isEmpty()){
-			for(Line2D link: c.getLinks()){
-				result &= testCollision(link,obs);
+	public boolean testConfigCollision(Vertex v, HBVNode obs){
+		if(v.validIsSet()){
+			return !v.isValid();
+		}else{
+			boolean result = false;
+			if(!obs.isEmpty()){
+				for(Line2D link: v.getC().getLinks()){
+					result &= testCollision(link,obs);
+				}
 			}
+			v.setValid(!result);
+			return result;
 		}
-		return result;
 	}
 	
 	
